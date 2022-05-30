@@ -21,27 +21,21 @@ Then click the following link to download your list. Make sure to extract it int
 ## How to get a MAL API key
 Go to your account settings on MAL and locate the API tab on the right. Then click the `Create ID` button.
 
-$picutre of tab, highlighting the button$
+{{picutre of tab, highlighting the button}}
 
 Fill out the form's required fields, I *recommend* putting in the following information:
 
 App Name: `myanimelist-randomizer`
-
 App Type: `Other`
-
 App Description: `I am a user of this app, which requires me to provide my own API key.`
-
 App Redirect URL: `localhost/oatuh`
-
 Homepage URL: `https://github.com/lupinx2/myanimelist-randomizer`
-
 Commercial/Non-Commercial: `Non-Commercial`
-
 Purpose of Use: `Other`, or `Hobbyist` if you intend to edit this app.
 
 Once you have clicked `Submit`, navigate back to the API tab of your MAL account settings, you should see a new button called `Edit`.
 
-{picture highligting edit button}
+{{picture highligting edit button}}
 
 Click the `Edit` button and you should see the same form again with a new string of red text called `Client ID`, copy that string. 
 
@@ -49,7 +43,7 @@ Click the `Edit` button and you should see the same form again with a new string
 
 Now that you have your API key, open the `config.py` file in any text editor (Notepad will do) and paste it inside the quotes, replacing the placeholder asterisks.
 
-{picture of config.py file}
+{{picture of config.py file}}
 
 ## Usage
 First clone/download this repo and make sure to follow the steps above to either get your XML MAL file or API Key.
