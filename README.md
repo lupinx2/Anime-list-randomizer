@@ -1,4 +1,4 @@
-# malptw-rand
+# myanimelist-randomizer
 Randomly selects an anime listing from your MAL plan to watch section.
 
 ## Requirements
