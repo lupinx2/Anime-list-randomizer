@@ -2,24 +2,58 @@
 # Using either the API or a local xml file.
 #
 # TODO
-# update readme
-# Merge with GUI branch when ready.
+# Update readme with pictures
+#
+# Test with: Debian / fresh python install / no internet.
+# 
+# PySimpleGUI:
+#   Before anything else, draw a mockup of the final design.
+#       Add xml / api selection.
+#       Add radial button functionality
+#       Improve output formatting, aspect.
+#
+# Remove console output
+#   make all the print calls conditional to a DEBUG bool?
 
 from argparse import ArgumentParser
+import xml.etree.ElementTree as ET
+import PySimpleGUI as Gooey
 from time import sleep
 from cmd import PROMPT
-import config
-import xml.etree.ElementTree as ET
 import requests
+import config
 import random
-import json
 import glob
+import json
+
 
 if __name__ == '__main__':
 
     ptw_list = list()
     ptw_list_id = list()
     opts = ["y", "n"]
+
+    Gooey.theme('LightGray')
+    layout = [  [Gooey.Text('Set parameters:')],
+            #[Gooey.Text('Enter username:'), Gooey.InputText()],
+            #The group of radio buttons at the top
+            [Gooey.Radio("Exclude Movies", 666, False, False),
+             Gooey.Radio("Only Movies", 666, False, False),
+             Gooey.Radio("Any anime", 666, True, False)],     
+            #the two buttons in the middle
+            [Gooey.Button('Randomize'), Gooey.Button('Exit')],
+            #the output at the end
+            [Gooey.Text("",size=(25, 2) ,key='-OUTPUT-')]]            
+    window = Gooey.Window('MALptw-rand', layout)
+
+    # Event Loop
+    while True:
+        event, values = window.read()
+        if event in (Gooey.WIN_CLOSED, 'Exit'):
+            break
+        if event == 'Randomize':
+            window['-OUTPUT-'].update("This is the output! Lorem ipsum dolor sit amet, consectetur000025")
+    window.close()
 
     # Prompt user for xml or api.
     while True:
