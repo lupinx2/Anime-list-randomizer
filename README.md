@@ -25,13 +25,13 @@ Go to your account settings on MAL and locate the API tab on the right. Then cli
 
 Fill out the form's required fields, I *recommend* putting in the following information:
 
-App Name: `myanimelist-randomizer`
-App Type: `Other`
-App Description: `I am a user of this app, which requires me to provide my own API key.`
-App Redirect URL: `localhost/oatuh`
-Homepage URL: `https://github.com/lupinx2/myanimelist-randomizer`
-Commercial/Non-Commercial: `Non-Commercial`
-Purpose of Use: `Other`, or `Hobbyist` if you intend to edit this app.
+**App Name:** `myanimelist-randomizer`  
+**App Type:** `Other`  
+**App Description:** `I am a user of this app, which requires me to provide my own API key.`  
+**App Redirect URL:** `localhost/oatuh`  
+**Homepage URL:** `https://github.com/lupinx2/myanimelist-randomizer`  
+**Commercial/Non-Commercial:** `Non-Commercial`  
+**Purpose of Use:** `Other`, or `Hobbyist` if you intend to edit this app.  
 
 Once you have clicked `Submit`, navigate back to the API tab of your MAL account settings, you should see a new button called `Edit`.
 
