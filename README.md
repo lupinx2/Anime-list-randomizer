@@ -39,7 +39,7 @@ Once you have clicked `Submit`, navigate back to the API tab of your MAL account
 
 Click the `Edit` button and you should see the same form again with a new string of red text called `Client ID`, copy that string. 
 
-**NOTE: Sharing your Client ID with other people runs the risk that they might use it badly and you get in trouble for it; treat it like you would a password.**
+**NOTE: Sharing your Client ID runs the risk that others might use it badly and you get in trouble for it; treat it like you would a password.**
 
 Now that you have your API key, open the `config.py` file in any text editor (Notepad will do) and paste it inside the quotes, replacing the placeholder asterisks.
 
@@ -55,6 +55,12 @@ If you're not on Windows, or would prefer to use a terminal just `cd` into the r
 `python malptw_rand.py` or `python3 malptw_rand.py`
 
 to get a random anime from your PTW list.
+
+## FAQ
+
+**Q:** This seems like way too much effort just to pick a random anime.
+
+**A:** [Spin.moe](https://spin.moe/) is usually a far more convenient way to do it, this app is mostly a learning project for myself.
 
 ## Contributions
 
