@@ -21,7 +21,7 @@ Then click the following link to download your list. Make sure to extract it int
 ## How to get a MAL API key
 Go to your account settings on MAL and locate the API tab on the right. Then click the `Create ID` button.
 
-{{picutre of tab, highlighting the button}}
+![Create ID button](https://i.ibb.co/9NcHkXT/image.png)
 
 Fill out the form's required fields, I *recommend* putting in the following information:
 
@@ -35,7 +35,7 @@ Fill out the form's required fields, I *recommend* putting in the following info
 
 Once you have clicked `Submit`, navigate back to the API tab of your MAL account settings, you should see a new button called `Edit`.
 
-{{picture highligting edit button}}
+![Edit button](https://i.ibb.co/P6J2XFg/image.png)
 
 Click the `Edit` button and you should see the same form again with a new string of red text called `Client ID`, copy that string. 
 
@@ -43,7 +43,7 @@ Click the `Edit` button and you should see the same form again with a new string
 
 Now that you have your API key, open the `config.py` file in any text editor (Notepad will do) and paste it inside the quotes, replacing the placeholder asterisks.
 
-{{picture of config.py file}}
+![Config file](https://i.ibb.co/prwnmh4/image.png)
 
 ## Usage
 First clone/download this repo and make sure to follow the steps above to either get your XML MAL file or API Key.
