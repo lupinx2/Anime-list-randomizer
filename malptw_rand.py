@@ -27,6 +27,7 @@
 #from argparse import ArgumentParser
 #from distutils.log import error
 #from msilib.schema import CheckBox
+from tabnanny import check
 import xml.etree.ElementTree as ET
 import PySimpleGUI as Gooey
 from time import sleep
@@ -37,6 +38,7 @@ import config
 import random
 import glob
 import json
+import io
 
 
 if __name__ == '__main__':
@@ -98,24 +100,33 @@ if __name__ == '__main__':
                 list_coverImg.pop()
         prevAPIcall = user_name
 
-    # Returns a tuple of the anime title and a link to the anime's page on MAL.
+    # Returns a tuple with the title, MAL page, and URL for the cover art.
     def GetRandomAnime():
         try:
             rand_index = random.randint(0, len(list_titles)-1)
-            return "{}".format(list_titles[rand_index]), ('https://myanimelist.net/anime/' +
-                                                       str(list_id[rand_index]))
+            return "{}".format(list_titles[rand_index]), \
+                ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
+                list_coverImg[rand_index]
         except:
             print ("Error: Failed to get anime data from list object.\n")
             return "Error: Failed to get anime from PTW list.", "https://myanimelist.net/anime/20"
 
-    # def GetCoverArt(rand_index):
-    #     try:
-    #         url = "list_coverImg[rand_index]"
-    #         response = requests.get(url, stream=True)
-    #         response.raw.decode_content = True
-    #         img = 
-    #     except: 
-    #        print("hi")
+    def GetCoverArt(coverURL):
+        try:
+            url = coverURL
+            response = requests.get(url, stream=True)
+            response.raw.decode_content = True
+        except: 
+           print("Error: Failed to get cover art.\n")
+        try:
+            jpg_img = Image.open(io.BytesIO(response.content)) # get jpg formated bytes from response
+            png_img = io.BytesIO() # create BytesIO object to store png
+            jpg_img.save(png_img, format="PNG") # convert jpg data to png format
+            png_data = png_img.getvalue() # create return object
+            return png_data
+        except: 
+           print("Error: Failed jpg to png conversion.\n")
+        
 # ------------------------------------------------------------------------------
 # GUI
 # ------------------------------------------------------------------------------
@@ -128,7 +139,7 @@ if __name__ == '__main__':
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
                     Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
                     Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
-                   [Gooey.Text("this is the output object", size=(40, 2), key='-OUTPUT-')]]
+                   [Gooey.Image(key="-OUTPUT_IMG-"), Gooey.Text("this is the output object", size=(40, 2), key='-OUTPUT-')]]
     # The settings tab.
     tab2_layout = [[Gooey.T('Your API Key:')],
                    [Gooey.In(key='apiKeyInput', password_char='●'), Gooey.Button('Save', key='-SAVE-')],
@@ -167,8 +178,9 @@ if __name__ == '__main__':
                 break
             else:  # use API.
                 APIgetAnimeList(values['-username-'])
-                Rnd_title, Rnd_link = GetRandomAnime() 
+                Rnd_title, Rnd_link, Rnd_CoverArt = GetRandomAnime() 
                 window['-OUTPUT-'].update(Rnd_title)
+                window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
     window.close()
 # ------------------------------------------------------------------------------
 # XML Functions
