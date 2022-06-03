@@ -5,17 +5,27 @@
 # Update readme with pictures
 #
 # Test with: Debian / fresh python install / no internet.
-# 
+#
 # PySimpleGUI:
-#   Before anything else, draw a mockup of the final design.
-#       Add xml / api selection.
-#       Add radial button functionality
-#       Improve output formatting, aspect.
+#   Add xml selection.
+#   Add randomize button function.
+#   Add radial button functionality
+#   Improve output formatting, aspect.
+#       Add cover art.
+#       Add link to MAL page/streaming.
+#
+# Make it so that APIgetAnimeList is only called if the -username- changes.
+#
+# Use the API from the GUI.
+#   Add save button functionality.
+# 
+# rename variables to be less confusing.
 #
 # Remove console output
 #   make all the print calls conditional to a DEBUG bool?
 
 from argparse import ArgumentParser
+from msilib.schema import CheckBox
 import xml.etree.ElementTree as ET
 import PySimpleGUI as Gooey
 from time import sleep
@@ -31,126 +41,32 @@ if __name__ == '__main__':
 
     ptw_list = list()
     ptw_list_id = list()
-    opts = ["y", "n"]
+    no_movies = False
+    only_movies = False
+    prevUsername = ""
 
-    Gooey.theme('LightGray')
-    layout = [  [Gooey.Text('Set parameters:')],
-            #[Gooey.Text('Enter username:'), Gooey.InputText()],
-            #The group of radio buttons at the top
-            [Gooey.Radio("Exclude Movies", 666, False, False),
-             Gooey.Radio("Only Movies", 666, False, False),
-             Gooey.Radio("Any anime", 666, True, False)],     
-            #the two buttons in the middle
-            [Gooey.Button('Randomize'), Gooey.Button('Exit')],
-            #the output at the end
-            [Gooey.Text("",size=(25, 2) ,key='-OUTPUT-')]]            
-    window = Gooey.Window('MALptw-rand', layout)
-
-    # Event Loop
-    while True:
-        event, values = window.read()
-        if event in (Gooey.WIN_CLOSED, 'Exit'):
-            break
-        if event == 'Randomize':
-            window['-OUTPUT-'].update("This is the output! Lorem ipsum dolor sit amet, consectetur000025")
-    window.close()
-
-    # Prompt user for xml or api.
-    while True:
-        method = input("Use local .xml file? [Y/N]: ").lower().rstrip()
-        if method not in opts:
-            print("Invalid input!")
-            continue
-        else:
-            if method == "y":
-                method = "xml"
-                break
-            elif method == "n":
-                method = "api"
-                break
-            continue
-
-    # Function to prompt user to exclude movies or series/OVA.
-    def promptForSettings():
-        global no_movies
-        global only_movies
-        while True:
-            no_movies = input("Exclude movies? [Y/N]: ").lower().rstrip()
-            if no_movies not in opts:
-                print("Invalid input!\n")
-                continue
-            else:
-                if no_movies == "n":
-                    only_movies = input(
-                        "Only movies? [Y/N]: ").lower().rstrip()
-                    if only_movies not in opts:
-                        print("Invalid input!\n")
-                        continue
-                    else:
-                        break
-                else:  # if no_movies = Y
-                    only_movies = "n"
-                    break
-
-    if method == "xml":
-
-        # Prompt user to pick an .xml file from the working directory.
-        ListOfXML = (glob.glob('*.xml'))
-        while True:
-            print('Select an xml file:')
-            i = int(0)
-            for each in ListOfXML:
-                print(i, ':', ListOfXML[i])
-                i = (i+1)
-            choice = input()
-            try:
-                choice = int(choice)
-                break
-            except ValueError:
-                print("Invalid input!\n")
-        selectedMALfile = ListOfXML[choice]
-        print(selectedMALfile, ' selected.\n')
-        list_tree = ET.parse(selectedMALfile)
-        tree_root = list_tree.getroot()
-
-        promptForSettings()
-
-        # This block populates the list objects from the local xml file.
-        for anime in tree_root.findall("anime"): # from each <anime> in the xml...
-            if anime.find("my_status").text == "Plan to Watch":  # where my_status == PTW...
-                ptw_list.append(anime.find("series_title").text + # append the series_title to ptw_list...
-                                " [" + anime.find("series_type").text + "]")  # also include its series_type...
-                ptw_list_id.append(anime.find("series_animedb_id").text) # then, append its series_animedb_id to ptw_list_id.
-                if (anime.find("series_type").text == "Movie") and (no_movies == "y"):
-                    ptw_list.pop()
-                    ptw_list_id.pop()
-                if (anime.find("series_type").text != "Movie") and (only_movies == "y"):
-                    ptw_list.pop()
-                    ptw_list_id.pop()
-
-    elif method == "api":
-
-        # Pull user's animelist by calling the MAL API, save the response to a dictionary.
-        while True:
-            try:
-                print("Please enter MAL username:")
-                user_name = input()
-                url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
-                    '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
-                headers = {'X-MAL-CLIENT-ID': config.API_key}
-                sleep(0.5)  # Sleep to prevent rate limiting.
-                response = requests.get(url, headers=headers)
-                if response.status_code != 200:
-                    raise Exception("API call error")
-                responseBytes = (response.content)
-                responseString = responseBytes.decode("utf-8")
-                break
-            except:
-                print("API call error, please verify username or internet connection.")
-                print("Status code: " + str(response.status_code) + "\n")
+# ------------------------------------------------------------------------------
+# API Functions
+# ------------------------------------------------------------------------------
+    # Pull user's animelist by calling the MAL API, save the response to a dictionary.
+    def APIgetAnimeList(user_name):
+        global prevUsername
+        if user_name == prevUsername:  # prevents unnecessary API calls
+            return
+        try:
+            url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
+                '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
+            headers = {'X-MAL-CLIENT-ID': config.API_key}
+            sleep(0.5)  # Sleep to prevent rate limiting.
+            response = requests.get(url, headers=headers)
+            if response.status_code != 200:
+                raise Exception("API call error")
+            responseBytes = (response.content)
+            responseString = responseBytes.decode("utf-8")
+        except:
+            print("API Call Error; Status code: " +
+                  str(response.status_code) + "\n")
         outputDict = json.loads(responseString)
-
-        promptForSettings()
 
         # This block poulates the list objects from the API response.
         def gen_dict_extract(var, key):
@@ -158,34 +74,113 @@ if __name__ == '__main__':
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
                     if dictKey == key:  # where the key matches the parameter...
                         yield dictValue  # yield the value...
-                    if isinstance(dictValue, list): # if you run into a list, recursively call this function.
+                    # if you run into a list, recursively call this function.
+                    if isinstance(dictValue, list):
                         for listItem in dictValue:
                             for result in gen_dict_extract(listItem, key):
                                 yield result
         for item in gen_dict_extract(outputDict, 'node'):
-            ptw_list.append(item['title'] + " [" + item ['media_type'] + "]")
+            ptw_list.append(item['title'] + " [" + item['media_type'] + "]")
             ptw_list_id.append(item['id'])
-            if (no_movies == "y" and item['media_type'] == "movie"):
+            if (no_movies == True and item['media_type'] == "movie"):
                 ptw_list.pop()
                 ptw_list_id.pop()
-            if (only_movies == "y" and not item['media_type'] == "movie"):
+            if (only_movies == True and not item['media_type'] == "movie"):
                 ptw_list.pop()
                 ptw_list_id.pop()
+        prevUsername = user_name
 
-    else:
-        print("Input error, exiting...")
-        exit()
-
-    # Prompt user to pick a random anime from ptw_list.
-    while True:
-        user_in = input("Get random anime? [Y/N]: ").lower().rstrip()
-        if user_in not in opts:
-            print("Invalid input!\n")
-            continue
-        elif user_in == "n":
-            print("goodbye!")
-            break
+    # Returns a tuple of the anime title and a link to the anime's page on MAL.
+    def GetRandomAnime():
         rand_index = random.randint(0, len(ptw_list)-1)
-        print("Your random anime is: {}".format(ptw_list[rand_index]))
-        print('https://myanimelist.net/anime/' +
-              str(ptw_list_id[rand_index]) + "/\n")
+        return "{}".format(ptw_list[rand_index]), ('https://myanimelist.net/anime/' +
+                                                   str(ptw_list_id[rand_index]))
+# ------------------------------------------------------------------------------
+# GUI
+# ------------------------------------------------------------------------------
+    # This is spaghetti code, clean it up later.
+    Gooey.theme('LightGray')
+    # The main tab.
+    tab1_layout = [[Gooey.Text('Allof which makes me anxious:')],
+                   [Gooey.Text('MAL username:'),
+                    Gooey.InputText(key='-username-')],
+                   [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
+                    Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
+                    Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
+                   [Gooey.Text("this is the output object", size=(40, 2), key='-OUTPUT-')]]
+    # The settings tab.
+    tab2_layout = [[Gooey.T('Your API Key:')],
+                   [Gooey.In(key='apiKeyInput', password_char='●'), Gooey.Button('Save', key='-SAVE-')],
+                   [Gooey.Checkbox('Use local XML file', key='-useXML-')]]
+    # The main layout.
+    layout = [
+        [Gooey.TabGroup([
+            [Gooey.Tab('Main', tab1_layout),
+             Gooey.Tab('Settings', tab2_layout)]
+        ])],
+        [Gooey.Button('Randomize!'), Gooey.Button(
+            'Exit')]  # The buttons at the bottom
+    ]
+    window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
+
+    # Loop listening for GUI events.
+    while True:
+        event, values = window.read()
+        if event in (666, '-no_Movies-'):
+            no_movies = True
+            only_movies = False
+        if event in (666, '-only_Movies-'):
+            no_movies = False
+            only_movies = True
+        if event in (666, '-any_Anime-'):
+            no_movies = False
+            only_movies = False
+        if event in (Gooey.WIN_CLOSED, 'Exit'):
+            exit()
+        if event == 'Randomize!':
+            if values['-useXML-'] == True:
+                # do nothing
+                break
+            else:  # use API.
+                APIgetAnimeList(values['-username-'])
+                Rnd_title, Rnd_link = GetRandomAnime() 
+                window['-OUTPUT-'].update(Rnd_title)
+    window.close()
+# ------------------------------------------------------------------------------
+# XML Functions
+# ------------------------------------------------------------------------------
+
+    # Prompt user to pick an .xml file from the working directory.
+    ListOfXML = (glob.glob('*.xml'))
+    while True:
+        print('Select an xml file:')
+        i = int(0)
+        for each in ListOfXML:
+            print(i, ':', ListOfXML[i])
+            i = (i+1)
+        choice = input()
+        try:
+            choice = int(choice)
+            break
+        except ValueError:
+            print("Invalid input!\n")
+    selectedMALfile = ListOfXML[choice]
+    print(selectedMALfile, ' selected.\n')
+    list_tree = ET.parse(selectedMALfile)
+    tree_root = list_tree.getroot()
+
+    # This block populates the list objects from the local xml file.
+    # from each <anime> in the xml...
+    for anime in tree_root.findall("anime"):
+        # where my_status == PTW...
+        if anime.find("my_status").text == "Plan to Watch":
+            ptw_list.append(anime.find("series_title").text +  # append the series_title to ptw_list...
+                            " [" + anime.find("series_type").text + "]")  # also include its series_type...
+            # then, append its series_animedb_id to ptw_list_id.
+            ptw_list_id.append(anime.find("series_animedb_id").text)
+            if (anime.find("series_type").text == "Movie") and (no_movies == "y"):
+                ptw_list.pop()
+                ptw_list_id.pop()
+            if (anime.find("series_type").text != "Movie") and (only_movies == "y"):
+                ptw_list.pop()
+                ptw_list_id.pop()
