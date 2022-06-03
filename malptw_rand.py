@@ -21,10 +21,13 @@
 # 
 # rename variables to be less confusing.
 #
+# Handle all errors in the GUI with user friendly messages.
+#
 # Remove console output
 #   make all the print calls conditional to a DEBUG bool?
 
 from argparse import ArgumentParser
+from distutils.log import error
 from msilib.schema import CheckBox
 import xml.etree.ElementTree as ET
 import PySimpleGUI as Gooey
@@ -43,29 +46,31 @@ if __name__ == '__main__':
     ptw_list_id = list()
     no_movies = False
     only_movies = False
-    prevUsername = ""
+    prevAPIcall = ""
 
 # ------------------------------------------------------------------------------
 # API Functions
 # ------------------------------------------------------------------------------
     # Pull user's animelist by calling the MAL API, save the response to a dictionary.
     def APIgetAnimeList(user_name):
-        global prevUsername
-        if user_name == prevUsername:  # prevents unnecessary API calls
+        global prevAPIcall
+        if user_name == prevAPIcall:  # prevents unnecessary API calls
             return
         try:
             url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
                 '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
             headers = {'X-MAL-CLIENT-ID': config.API_key}
-            sleep(0.5)  # Sleep to prevent rate limiting.
+            sleep(0.7)  # Sleep to prevent rate limiting.
             response = requests.get(url, headers=headers)
             if response.status_code != 200:
                 raise Exception("API call error")
             responseBytes = (response.content)
             responseString = responseBytes.decode("utf-8")
         except:
-            print("API Call Error; Status code: " +
+            print("Error: API call failed Status code: " +
                   str(response.status_code) + "\n")
+            window['-OUTPUT-'].update("Error: API call failed.")
+            return 
         outputDict = json.loads(responseString)
 
         # This block poulates the list objects from the API response.
@@ -88,13 +93,17 @@ if __name__ == '__main__':
             if (only_movies == True and not item['media_type'] == "movie"):
                 ptw_list.pop()
                 ptw_list_id.pop()
-        prevUsername = user_name
+        prevAPIcall = user_name
 
     # Returns a tuple of the anime title and a link to the anime's page on MAL.
     def GetRandomAnime():
-        rand_index = random.randint(0, len(ptw_list)-1)
-        return "{}".format(ptw_list[rand_index]), ('https://myanimelist.net/anime/' +
-                                                   str(ptw_list_id[rand_index]))
+        try:
+            rand_index = random.randint(0, len(ptw_list)-1)
+            return "{}".format(ptw_list[rand_index]), ('https://myanimelist.net/anime/' +
+                                                       str(ptw_list_id[rand_index]))
+        except:
+            print ("Error: Failed to get anime data from list object.\n")
+            return "Error: Failed to reach anime list.", "Error: Failed to reach anime list."
 # ------------------------------------------------------------------------------
 # GUI
 # ------------------------------------------------------------------------------
@@ -129,12 +138,15 @@ if __name__ == '__main__':
         if event in (666, '-no_Movies-'):
             no_movies = True
             only_movies = False
+            prevAPIcall = ""
         if event in (666, '-only_Movies-'):
             no_movies = False
             only_movies = True
+            prevAPIcall = ""
         if event in (666, '-any_Anime-'):
             no_movies = False
             only_movies = False
+            prevAPIcall = ""
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             exit()
         if event == 'Randomize!':
