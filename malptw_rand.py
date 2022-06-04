@@ -6,14 +6,14 @@
 #
 # Test with: Debian / fresh python install / no internet.
 # Test if no_movies and only_movies are working correctly.
-# Test if prevAPIcall is working correctly when settings are changed.
+#  or rename only_movies to exclude_tv shows isntead.
 #
 # PySimpleGUI:
 #   Add xml selection.
 #   Add randomize button XML function.
 #
 #   Improve output formatting, aspect.
-#       Add placeholder cover art.
+#       Add placeholder cover art?
 #       Add link to MAL page/streaming.
 #       Make cover art clickable?
 #       Force cover art dimensions.
@@ -26,11 +26,11 @@
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
-import PySimpleGUI as Gooey
+import PySimpleGUI as Gooey # pip isntall PySimpleGUI
 from random import randint
 from config import API_key
 from time import sleep
-from PIL import Image
+from PIL import Image #pip isntall pillow
 import requests
 import glob
 import io
@@ -64,10 +64,7 @@ if __name__ == '__main__':
             responseBytes = (response.content)
             responseString = responseBytes.decode("utf-8")
         except:
-            print("Error: API call failed Status code: " +
-                  str(response.status_code) + "\n")
-            window['-OUTPUT-'].update("Error: API call failed.")
-            return
+            window.Element('-OUTPUT-').Update("API call failed Status code: " + str(response.status_code))
         # convert response to dictionary
         outputDict = jsonLoads(responseString)
 
@@ -113,8 +110,9 @@ if __name__ == '__main__':
                 list_coverImg[rand_index]
         except:
             # on an error, the randomizer returns Naruto.
-            print("Error: Failed to get anime data from list object.\n")
-            return "Error: Failed to get anime from PTW list.", "https://myanimelist.net/anime/20", "https://cdn.myanimelist.net/images/anime/13/17405l.jpg"
+            return "Error: Failed to get anime from PTW list.", \
+                "https://myanimelist.net/anime/20", \
+                "https://cdn.myanimelist.net/images/anime/13/17405l.jpg"
 
     def GetCoverArt(coverURL):
         try:
@@ -122,7 +120,7 @@ if __name__ == '__main__':
             response = requests.get(url, stream=True)
             response.raw.decode_content = True
         except:
-            print("Error: Failed to get cover art.\n")
+            raise("Error: Failed to get cover art.")
         try:
             # get jpg formated bytes from response
             jpg_img = Image.open(io.BytesIO(response.content))
@@ -132,31 +130,30 @@ if __name__ == '__main__':
             png_data = png_img.getvalue()  # create return object
             return png_data
         except:
-            print("Error: Failed jpg to png conversion.\n")
+            raise("Error: Failed jpg to png conversion.")
 
 # ------------------------------------------------------------------------------
 # GUI
 # ------------------------------------------------------------------------------
     # This is spaghetti code, clean it up later.
-    Gooey.theme('LightGray')
+    Gooey.theme('LightGrey1')
     # The main tab.
-    tab1_layout = [[Gooey.Text('Allof which makes me anxious:')],
-                   [Gooey.Text('MAL username:'),
-                    Gooey.InputText(key='-username-', right_click_menu=[[''], ['Paste']])],
+    tab1_layout = [[Gooey.Text('MAL username:'),
+                     Gooey.InputText(key='-username-', right_click_menu=[[''], ['Paste Username']])],
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
-                    Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
-                    Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
+                     Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
+                     Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
                    [Gooey.Image(key="-OUTPUT_IMG-"), Gooey.Text("", size=(40, 2), key='-OUTPUT-')]]
     # The settings tab.
     tab2_layout = [[Gooey.T('Your API Key:')],
-                   [Gooey.In(key='apiKeyInput', password_char='●'),
-                    Gooey.Button('Save', key='-SAVE-')],
+                   [Gooey.In(key='-apiKeyInput-', password_char='●', right_click_menu=[[''], ['Paste API key']]),
+                     Gooey.Button('Save', key='-SAVE-')],
                    [Gooey.Checkbox('Use local XML file', key='-useXML-')]]
     # The main layout.
     layout = [
         [Gooey.TabGroup([
             [Gooey.Tab('Main', tab1_layout),
-             Gooey.Tab('Settings', tab2_layout)]
+              Gooey.Tab('Settings', tab2_layout)]
         ])],
         [Gooey.Button('Randomize!'), Gooey.Button(
             'Exit')]  # The buttons at the bottom
@@ -166,8 +163,10 @@ if __name__ == '__main__':
     # Loop listening for GUI events.
     while True:
         event, values = window.read()
-        if event == 'Paste':
-            window['-IN-'].update(Gooey.clipboard_get(), paste=True)
+        if event == 'Paste Username':
+            window['-username-'].update(Gooey.clipboard_get(), paste=True)
+        if event == 'Paste API key':
+            window['-apiKeyInput-'].update(Gooey.clipboard_get(), paste=True)
         if event in (666, '-no_Movies-'):
             no_movies = True
             only_movies = False
@@ -187,15 +186,18 @@ if __name__ == '__main__':
                 # do nothing
                 break
             else:  # use API.
-                APIgetAnimeList(values['-username-'])
-                if not list_titles and not list_id and not list_coverImg:
+                try:
+                    APIgetAnimeList(values['-username-'])
+                except:
+                    window['-OUTPUT_IMG-'].update(GetCoverArt("https://cdn.myanimelist.net/images/anime/13/17405l.jpg"))
+                    continue
+                if not list_titles and not list_id and not list_coverImg:# if the list is empty after API call
                     prevAPIcall = values['-username-']
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
-                else:
+                else: # if the API call was successful 
                     Rnd_title, Rnd_link, Rnd_CoverArt = GetRandomAnime()
                     window['-OUTPUT-'].update(Rnd_title)
                     window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
-
         if event in ('-SAVE-'):
             API_key = values['apiKeyInput']
             with open('config.py', 'w') as file:
