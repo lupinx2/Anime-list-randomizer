@@ -15,15 +15,10 @@
 #   Improve output formatting, aspect.
 #       Add placeholder cover art.
 #       Add link to MAL page/streaming.
-#
-# Use the API key from the GUI.
-#   Add save to config button functionality.
 # 
 # rename variables to be less confusing.
 #
 # Handle all errors in the GUI with user friendly messages.
-#
-# narrow scope of imports to only what is needed.
 #
 # Remove console output before pull request?
 
@@ -74,6 +69,9 @@ if __name__ == '__main__':
         outputDict = jsonLoads(responseString) # convert response to dictionary
 
         # This block poulates the list objects from the API response.
+        list_titles.clear()
+        list_id.clear()
+        list_coverImg.clear()
         def gen_dict_extract(var, key):
             if isinstance(var, dict):
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
@@ -179,6 +177,10 @@ if __name__ == '__main__':
                 Rnd_title, Rnd_link, Rnd_CoverArt = GetRandomAnime() 
                 window['-OUTPUT-'].update(Rnd_title)
                 window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
+        if event in ('-SAVE-'):
+            API_key = values['apiKeyInput']
+            with open('config.py', 'w') as file:
+                file.write("API_key = \"" + API_key + "\"")            
     window.close()
 # ------------------------------------------------------------------------------
 # XML Functions
