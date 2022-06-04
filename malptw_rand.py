@@ -5,16 +5,18 @@
 # Update readme with pictures
 #
 # Test with: Debian / fresh python install / no internet.
-# Test with empty ptw list.
 # Test if no_movies and only_movies are working correctly.
-# Test if prevAPIcall is working correctly when username changes or settings are changed.
+# Test if prevAPIcall is working correctly when settings are changed.
 #
 # PySimpleGUI:
 #   Add xml selection.
 #   Add randomize button XML function.
+#
 #   Improve output formatting, aspect.
 #       Add placeholder cover art.
 #       Add link to MAL page/streaming.
+#       Make cover art clickable?
+#       Force cover art dimensions.
 # 
 # rename variables to be less confusing.
 #
@@ -104,8 +106,8 @@ if __name__ == '__main__':
                 ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
                 list_coverImg[rand_index]
         except:
-            print ("Error: Failed to get anime data from list object.\n")
-            return "Error: Failed to get anime from PTW list.", "https://myanimelist.net/anime/20"
+            print ("Error: Failed to get anime data from list object.\n") # on an error, the randomizer returns Naruto.
+            return "Error: Failed to get anime from PTW list.", "https://myanimelist.net/anime/20", "https://cdn.myanimelist.net/images/anime/13/17405l.jpg"
 
     def GetCoverArt(coverURL):
         try:
@@ -174,9 +176,12 @@ if __name__ == '__main__':
                 break
             else:  # use API.
                 APIgetAnimeList(values['-username-'])
-                Rnd_title, Rnd_link, Rnd_CoverArt = GetRandomAnime() 
-                window['-OUTPUT-'].update(Rnd_title)
-                window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
+                if not list_titles and not list_id and not list_coverImg:
+                    Rnd_title, Rnd_link, Rnd_CoverArt = GetRandomAnime() 
+                    window['-OUTPUT-'].update(Rnd_title)
+                    window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
+                else:
+                    window['-OUTPUT-'].update("Error: No anime found in list.")
         if event in ('-SAVE-'):
             API_key = values['apiKeyInput']
             with open('config.py', 'w') as file:
