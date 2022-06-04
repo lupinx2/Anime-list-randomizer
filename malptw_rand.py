@@ -49,6 +49,7 @@ if __name__ == '__main__':
     no_movies = False
     only_movies = False
     prevAPIcall = ""
+    prevXMLfile = ""
 
 # ------------------------------------------------------------------------------
 # API Functions - Maintain feature parity with XML functions.
@@ -57,13 +58,13 @@ if __name__ == '__main__':
     # Pull user's animelist by calling the MAL API, save the response to a dictionary.
     def APIgetAnimeList(user_name):
         global prevAPIcall
-        if user_name == prevAPIcall:  # prevents unnecessary API calls
+        if user_name == prevAPIcall:  # prevents redundant API calls
             return
         try:
             url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
                 '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
             headers = {'X-MAL-CLIENT-ID': API_key}
-            sleep(0.7)  # Sleep to prevent rate limiting.
+            sleep(0.5)  # Sleep to prevent rate limiting.
             response = requests.get(url, headers=headers)            
             if response.status_code != 200:
                 if response.status_code == 404:
@@ -113,6 +114,14 @@ if __name__ == '__main__':
 
     # Pull anime list from MAL xml file, save directly to lists.
     def XMLgetAnimeList(XMLfile):
+        global prevXMLfile
+        if XMLfile == prevXMLfile: # prevents redundant XML parsing
+            return
+        # Clear the lists when username or settings change
+        list_titles.clear()
+        list_id.clear()
+        list_coverImg.clear()
+        # Populate the lists from the XML file.
         list_tree = ET.parse(XMLfile)
         tree_root = list_tree.getroot()
         for anime in tree_root.findall("anime"):# from each <anime> in the xml...
@@ -125,13 +134,14 @@ if __name__ == '__main__':
                 if (anime.find("series_type").text != "Movie") and (only_movies == True):
                     list_titles.pop()
                     list_id.pop()
+        prevXMLfile = XMLfile
 
     # Get URL for cover art of a single anime, using the API.
     def XMLgetCoverURL(animeID):
         try:
             url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
             headers = {'X-MAL-CLIENT-ID': API_key}
-            sleep(0.5)  # Sleep to prevent rate limiting.
+            sleep(0.4)  # Sleep to prevent rate limiting.
             response = requests.get(url, headers=headers)            
             if response.status_code != 200:
                 if response.status_code == 404:
@@ -173,6 +183,7 @@ if __name__ == '__main__':
     def GetCoverArt(coverURL):
         try:
             url = coverURL
+            sleep(0.4)  # Sleep to prevent rate limiting.
             response = requests.get(url, stream=True)
             response.raw.decode_content = True
         except:
@@ -191,13 +202,13 @@ if __name__ == '__main__':
 # ------------------------------------------------------------------------------
 # GUI
 # ------------------------------------------------------------------------------
-    # This is spaghetti code, clean it up later.
+   
     Gooey.theme('LightGrey1')
     # The main tab.
     tab1_layout = [[Gooey.Text('MAL username:'),
                      Gooey.InputText(key='-username-', right_click_menu=[[''], ['Paste Username']])],
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
-                     Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
+                     Gooey.Radio("Only Movies/OVA", 666, False, False, key='-only_Movies-'),
                      Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
                    [Gooey.Image(key="-OUTPUT_IMG-",size=(61,85)), Gooey.Text("", font='Verdana 13 bold', size=(35, 2), key='-OUTPUT-')]]
     # The settings tab.
@@ -231,14 +242,20 @@ if __name__ == '__main__':
             no_movies = True
             only_movies = False
             prevAPIcall = ""
+            prevXMLfile = ""
         if event in (666, '-only_Movies-'):
             no_movies = False
             only_movies = True
             prevAPIcall = ""
+            prevXMLfile = ""
         if event in (666, '-any_Anime-'):
             no_movies = False
             only_movies = False
             prevAPIcall = ""
+            prevXMLfile = ""
+        if event == '-useXML-':
+            prevAPIcall = ""
+            prevXMLfile = ""
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             exit()
         if event == 'Randomize!':
@@ -248,6 +265,7 @@ if __name__ == '__main__':
                 except:
                     window['-OUTPUT-'].update("Error: Failed to parse XML file.")
                 if not list_titles and not list_id: # if the lists are empty after parsing the xml
+                    prevXMLfile = values['-XMLfileInput-']
                     window['-OUTPUT-'].update("Error: No anime found in XML file.")
                 else:
                     Rnd_title, Rnd_url, Rnd_CoverURL = GetRandomAnime()
@@ -268,7 +286,7 @@ if __name__ == '__main__':
                     window['-OUTPUT-'].update(Rnd_title)
                     window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
         if event in ('-SAVE-'):
-            API_key = values['apiKeyInput']
+            API_key = values['-apiKeyInput-']
             with open('config.py', 'w') as file:
                 file.write("API_key = \"" + API_key + "\"")
     window.close()
