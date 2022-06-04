@@ -21,29 +21,30 @@ Then click the following link to download your list. Make sure to extract it int
 ## How to get a MAL API key
 Go to your account settings on MAL and locate the API tab on the right. Then click the `Create ID` button.
 
-{{picutre of tab, highlighting the button}}
+![Create ID button](https://i.ibb.co/9NcHkXT/image.png)
 
 Fill out the form's required fields, I *recommend* putting in the following information:
 
 **App Name:** `myanimelist-randomizer`  
 **App Type:** `Other`  
 **App Description:** `I am a user of this app, which requires me to provide my own API key.`  
-**App Redirect URL:** `localhost/oatuh`  
+**App Redirect URL:** `http://localhost/oauth`  
 **Homepage URL:** `https://github.com/lupinx2/myanimelist-randomizer`  
 **Commercial/Non-Commercial:** `Non-Commercial`  
+**Name/Company Name** Your MAL username  
 **Purpose of Use:** `Other`, or `Hobbyist` if you intend to edit this app.  
 
 Once you have clicked `Submit`, navigate back to the API tab of your MAL account settings, you should see a new button called `Edit`.
 
-{{picture highligting edit button}}
+![Edit button](https://i.ibb.co/P6J2XFg/image.png)
 
 Click the `Edit` button and you should see the same form again with a new string of red text called `Client ID`, copy that string. 
 
-**NOTE: Sharing your Client ID with other people runs the risk that they might use it badly and you get in trouble for it; treat it like you would a password.**
+**NOTE: Sharing your Client ID runs the risk that others might use it badly and you get in trouble for it; treat it like you would a password.**
 
 Now that you have your API key, open the `config.py` file in any text editor (Notepad will do) and paste it inside the quotes, replacing the placeholder asterisks.
 
-{{picture of config.py file}}
+![Config file](https://i.ibb.co/prwnmh4/image.png)
 
 ## Usage
 First clone/download this repo and make sure to follow the steps above to either get your XML MAL file or API Key.
@@ -55,6 +56,12 @@ If you're not on Windows, or would prefer to use a terminal just `cd` into the r
 `python malptw_rand.py` or `python3 malptw_rand.py`
 
 to get a random anime from your PTW list.
+
+## FAQ
+
+**Q:** This seems like way too much effort just to pick a random anime.
+
+**A:** [Spin.moe](https://spin.moe/) is usually a far more convenient way to do it, this app is mostly a learning project for myself.
 
 ## Contributions
 
