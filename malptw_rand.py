@@ -4,14 +4,9 @@
 # TODO
 # Update readme with pictures
 #
-# Test with: Debian / fresh python install / no internet.
+# Test with: fresh python install / no internet.
 # Test if no_movies and only_movies are working correctly.
 #  or rename only_movies to exclude_tv shows isntead.
-#
-# XML:
-#   XML files do not contain cover art links,
-#    so currently GetRandomAnime() breaks in XML mode. 
-#    so might need to use the API to get the cover art.
 #
 #   Improve output formatting, style.
 #       Add placeholder cover art?
@@ -20,7 +15,6 @@
 #       Enter button to randomize
 # 
 #  Add manga support?
-#  pick one, Cover, CoverArt, or img; not all three.
 #
 #  Add non-Naruto based exception handling.
 #    no, but seriously the exception handling is a mess.
@@ -60,22 +54,21 @@ if __name__ == '__main__':
         global prevAPIcall
         if user_name == prevAPIcall:  # prevents redundant API calls
             return
-        try:
-            url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
-                '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
-            headers = {'X-MAL-CLIENT-ID': API_key}
-            sleep(0.5)  # Sleep to prevent rate limiting.
-            response = requests.get(url, headers=headers)            
-            if response.status_code != 200:
-                if response.status_code == 404:
-                    window.Element('-OUTPUT-').Update('Username not found.')
-                    return
-                else:
-                    raise Exception("API call error")
-            responseBytes = (response.content)
-            responseString = responseBytes.decode("utf-8")
-        except:
-            window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
+        url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
+            '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
+        headers = {'X-MAL-CLIENT-ID': API_key}
+        sleep(0.5)  # Sleep to prevent rate limiting.
+        response = requests.get(url, headers=headers)            
+        if response.status_code != 200:
+            if response.status_code == 404:
+                window.Element('-OUTPUT-').Update('Error: No anime list found for ' + user_name)
+                raise Exception('No anime list found')
+            else:
+                window.Element('-OUTPUT-').Update("Error: API failed Status code: " + str(response.status_code))
+                raise Exception('API failed')
+        responseBytes = (response.content)
+        responseString = responseBytes.decode("utf-8")
+    
         # convert response to dictionary
         outputDict = jsonLoads(responseString)
         # Clear the lists when username or settings change
@@ -93,16 +86,15 @@ if __name__ == '__main__':
                         for listItem in dictValue:
                             for result in gen_dict_extract(listItem, key):
                                 yield result
-        for item in gen_dict_extract(outputDict, 'node'):
-            #list_titles.append(item['title'] + " [" + item['media_type'] + "]") # old version
+        for item in gen_dict_extract(outputDict, 'node'): 
             list_titles.append(item['title'])
             list_id.append(item['id'])
             list_coverImg.append(item['main_picture']['medium'])
-            if (no_movies == True and item['media_type'] == "movie"):
+            if (item['media_type'] == "movie") and (no_movies == True):
                 list_titles.pop()
                 list_id.pop()
                 list_coverImg.pop()
-            if (only_movies == True and not item['media_type'] == "movie"):
+            if (item['media_type'] != "movie") and (only_movies == True):
                 list_titles.pop()
                 list_id.pop()
                 list_coverImg.pop()
@@ -138,21 +130,19 @@ if __name__ == '__main__':
 
     # Get URL for cover art of a single anime, using the API.
     def XMLgetCoverURL(animeID):
-        try:
-            url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
-            headers = {'X-MAL-CLIENT-ID': API_key}
-            sleep(0.4)  # Sleep to prevent rate limiting.
-            response = requests.get(url, headers=headers)            
-            if response.status_code != 200:
-                if response.status_code == 404:
-                    window.Element('-OUTPUT-').Update('Error: cover art not found.')
-                    return
-                else:
-                    raise Exception("API call error")
-            responseBytes = (response.content)
-            responseString = responseBytes.decode("utf-8")
-        except:
-            window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
+        
+        url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
+        headers = {'X-MAL-CLIENT-ID': API_key}
+        sleep(0.4)  # Sleep to prevent rate limiting.
+        response = requests.get(url, headers=headers)            
+        if response.status_code != 200:
+            if response.status_code == 404:
+                window.Element('-OUTPUT-').Update('Error: cover art not found.')
+                return
+            else:
+                window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
+        responseBytes = (response.content)
+        responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
         return outputDict['main_picture']['medium']
         
@@ -181,23 +171,17 @@ if __name__ == '__main__':
 
     # Returns png image of the cover art from the URL.
     def GetCoverArt(coverURL):
-        try:
-            url = coverURL
-            sleep(0.4)  # Sleep to prevent rate limiting.
-            response = requests.get(url, stream=True)
-            response.raw.decode_content = True
-        except:
-            raise("Error: Failed to get cover art.")
-        try:
-            # get jpg formated bytes from response
-            jpg_img = Image.open(io.BytesIO(response.content))
-            png_img = io.BytesIO()  # create BytesIO object to store png
-            # convert jpg data to png format
-            jpg_img.save(png_img, format="PNG")
-            png_data = png_img.getvalue()  # create return object
-            return png_data
-        except:
-            raise("Error: Failed jpg to png conversion.")
+        url = coverURL
+        sleep(0.4)  # Sleep to prevent rate limiting.
+        response = requests.get(url, stream=True)
+        response.raw.decode_content = True
+        # get jpg formated bytes from response
+        jpg_img = Image.open(io.BytesIO(response.content))
+        png_img = io.BytesIO()  # create BytesIO object to store png
+        # convert jpg data to png format
+        jpg_img.save(png_img, format="PNG")
+        png_data = png_img.getvalue()  # create return object
+        return png_data
 
 # ------------------------------------------------------------------------------
 # GUI
@@ -215,7 +199,7 @@ if __name__ == '__main__':
     tab2_layout = [[Gooey.T('Your API Key:'),
                      Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
                      Gooey.Button('Save', key='-SAVE-')],
-                   [Gooey.Checkbox('Use local XML file', key='-useXML-'),
+                   [Gooey.Checkbox('Use local XML file', key='-useXML-', enable_events=True),
                      Gooey.Input(key='-XMLfileInput-'), Gooey.FileBrowse()],
                    [Gooey.Checkbox('Show mean score', key='-ShowScore-')],
                    [Gooey.Checkbox('Show additional info', key='-ShowInfo-')], # episodes, duration, rating, (genres/themes?)
@@ -264,24 +248,24 @@ if __name__ == '__main__':
                     XMLgetAnimeList(values['-XMLfileInput-'])
                 except:
                     window['-OUTPUT-'].update("Error: Failed to parse XML file.")
+                    continue
                 if not list_titles and not list_id: # if the lists are empty after parsing the xml
                     prevXMLfile = values['-XMLfileInput-']
                     window['-OUTPUT-'].update("Error: No anime found in XML file.")
-                else:
+                else: # if the XML parsing was successful and we have anime in the lists
                     Rnd_title, Rnd_url, Rnd_CoverURL = GetRandomAnime()
                     window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
                     window['-OUTPUT-'].update(Rnd_title)
             else:  # use API.
                 try:
                     APIgetAnimeList(values['-username-'])
-                except: # if the API call fails, return Naruto.
-                    window['-OUTPUT_IMG-'].update(GetCoverArt( \
-                        "https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"))
+                except:
+                    window['-OUTPUT-'].update("Error: Failed to get anime list.")
                     continue
                 if not list_titles and not list_id and not list_coverImg:# if the list is empty after API call
                     prevAPIcall = values['-username-']
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
-                else: # if the API call was successful 
+                else: # if the API call was successful and we have anime in the lists
                     Rnd_title, Rnd_link, Rnd_CoverURL = GetRandomAnime()
                     window['-OUTPUT-'].update(Rnd_title)
                     window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
