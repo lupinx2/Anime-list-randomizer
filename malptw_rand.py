@@ -12,15 +12,17 @@
 #   Add xml selection.
 #   Add randomize button XML function.
 #
-#   Improve output formatting, aspect.
+#   Improve output formatting, style.
 #       Add placeholder cover art?
 #       Add link to MAL page/streaming.
 #       Make cover art clickable?
 #       Enter button to randomize
+# 
+#  Add manga support?
 #
-# rename variables to be less confusing.
+#  Add non-Naruto based exception handling.
 #
-# Remove console output before pull request?
+#  Forced image size is not working correctly.
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
@@ -28,7 +30,7 @@ import PySimpleGUI as Gooey # pip isntall PySimpleGUI
 from random import randint
 from config import API_key
 from time import sleep
-from PIL import Image #pip isntall pillow
+from PIL import Image # pip isntall pillow
 import requests
 import glob
 import io
@@ -65,12 +67,11 @@ if __name__ == '__main__':
             window.Element('-OUTPUT-').Update("API call failed Status code: " + str(response.status_code))
         # convert response to dictionary
         outputDict = jsonLoads(responseString)
-
-        # This block poulates the list objects from the API response.
+        # Clear the lists when username or settings change
         list_titles.clear()
         list_id.clear()
         list_coverImg.clear()
-
+        # This block poulates the list objects from the API response.
         def gen_dict_extract(var, key):
             if isinstance(var, dict):
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
@@ -82,7 +83,8 @@ if __name__ == '__main__':
                             for result in gen_dict_extract(listItem, key):
                                 yield result
         for item in gen_dict_extract(outputDict, 'node'):
-            list_titles.append(item['title'] + " [" + item['media_type'] + "]")
+            #list_titles.append(item['title'] + " [" + item['media_type'] + "]") # old version
+            list_titles.append(item['title'])
             list_id.append(item['id'])
             list_coverImg.append(item['main_picture']['medium'])
             if (no_movies == True and item['media_type'] == "movie"):
@@ -141,19 +143,23 @@ if __name__ == '__main__':
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
                      Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
                      Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
-                   [Gooey.Image(key="-OUTPUT_IMG-",size=(61,85)), Gooey.Text("", size=(40, 2), key='-OUTPUT-')]]
+                   [Gooey.Image(key="-OUTPUT_IMG-",size=(61,85)), Gooey.Text("", font='Verdana 13 bold', size=(35, 2), key='-OUTPUT-')]]
     # The settings tab.
-    tab2_layout = [[Gooey.T('Your API Key:')],
-                   [Gooey.In(key='-apiKeyInput-', password_char='●', right_click_menu=[[''], ['Paste API key']]),
+    tab2_layout = [[Gooey.T('Your API Key:'),
+                     Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
                      Gooey.Button('Save', key='-SAVE-')],
-                   [Gooey.Checkbox('Use local XML file', key='-useXML-')]]
+                   [Gooey.Checkbox('Use local XML file', key='-useXML-'),
+                     Gooey.Input(key='-XMLfileInput-'), Gooey.FileBrowse()],
+                   [Gooey.Checkbox('Show mean score', key='-ShowScore-')],
+                   [Gooey.Checkbox('Show additional info', key='-ShowInfo-')], # episodes, duration, rating, (genres/themes?)
+                   [Gooey.Checkbox('Show english title', key='-ShowEnglish-')]]
     # The main layout.
     layout = [
         [Gooey.TabGroup([
             [Gooey.Tab('Main', tab1_layout),
               Gooey.Tab('Settings', tab2_layout)]
         ])],
-        [Gooey.Button('Randomize!'), Gooey.Button(
+        [Gooey.Push(), Gooey.Button('Randomize!'), Gooey.Button(
             'Exit')]  # The buttons at the bottom
     ]
     window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
