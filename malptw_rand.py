@@ -22,6 +22,8 @@
 #
 #  Add non-Naruto based exception handling.
 #
+#  preserve some settings between runs (e.g. xml file), use config file.
+#
 #  Forced image size is not working correctly.
 
 from json import loads as jsonLoads
