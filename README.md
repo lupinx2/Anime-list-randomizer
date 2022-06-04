@@ -28,9 +28,10 @@ Fill out the form's required fields, I *recommend* putting in the following info
 **App Name:** `myanimelist-randomizer`  
 **App Type:** `Other`  
 **App Description:** `I am a user of this app, which requires me to provide my own API key.`  
-**App Redirect URL:** `localhost/oatuh`  
+**App Redirect URL:** `http://localhost/oauth`  
 **Homepage URL:** `https://github.com/lupinx2/myanimelist-randomizer`  
 **Commercial/Non-Commercial:** `Non-Commercial`  
+**Name/Company Name** Your MAL username  
 **Purpose of Use:** `Other`, or `Hobbyist` if you intend to edit this app.  
 
 Once you have clicked `Submit`, navigate back to the API tab of your MAL account settings, you should see a new button called `Edit`.
