@@ -22,6 +22,8 @@
 #  Add manga support?
 #
 #  Add non-Naruto based exception handling.
+#    no, but seriously the exception handling is a mess.
+#    make every except clause pass an error code to a function that prints the error.
 #
 #  preserve some settings between runs (e.g. xml file), use config file.
 #
@@ -29,7 +31,7 @@
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
-import PySimpleGUI as Gooey # pip isntall PySimpleGUI
+import PySimpleGUI as Gooey # pip isntall pysimplegui
 from random import randint
 from config import API_key
 from time import sleep
@@ -61,13 +63,17 @@ if __name__ == '__main__':
                 '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
             headers = {'X-MAL-CLIENT-ID': API_key}
             sleep(0.7)  # Sleep to prevent rate limiting.
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers)            
             if response.status_code != 200:
-                raise Exception("API call error")
+                if response.status_code == 404:
+                    window.Element('-OUTPUT-').Update('Username not found.')
+                    return
+                else:
+                    raise Exception("API call error")
             responseBytes = (response.content)
             responseString = responseBytes.decode("utf-8")
         except:
-            window.Element('-OUTPUT-').Update("API call failed Status code: " + str(response.status_code))
+            window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
         # convert response to dictionary
         outputDict = jsonLoads(responseString)
         # Clear the lists when username or settings change
@@ -110,8 +116,7 @@ if __name__ == '__main__':
         tree_root = list_tree.getroot()
         for anime in tree_root.findall("anime"):# from each <anime> in the xml...
             if anime.find("my_status").text == "Plan to Watch":# where my_status == PTW...
-                list_titles.append(anime.find("series_title").text +  # append the series_title to ptw_list...
-                                " [" + anime.find("series_type").text + "]")  # also include its series_type...
+                list_titles.append(anime.find("series_title").text )  # append the series_title to ptw_list...
                 list_id.append(anime.find("series_animedb_id").text)# then, append its series_animedb_id to ptw_list_id.
                 if (anime.find("series_type").text == "Movie") and (no_movies == True):
                     list_titles.pop()
@@ -119,6 +124,25 @@ if __name__ == '__main__':
                 if (anime.find("series_type").text != "Movie") and (only_movies == True):
                     list_titles.pop()
                     list_id.pop()
+
+    # Get URL for cover art of a single anime, using the API.
+    def XMLgetCoverURL(animeID):
+        try:
+            url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
+            headers = {'X-MAL-CLIENT-ID': API_key}
+            sleep(0.5)  # Sleep to prevent rate limiting.
+            response = requests.get(url, headers=headers)            
+            if response.status_code != 200:
+                if response.status_code == 404:
+                    window.Element('-OUTPUT-').Update('Error: cover art not found.')
+                    return
+                else:
+                    raise Exception("API call error")
+            responseBytes = (response.content)
+            responseString = responseBytes.decode("utf-8")
+        except:
+            window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
+        return jsonLoads(responseString).item['main_picture']['medium']
         
 
 # ------------------------------------------------------------------------------
@@ -129,15 +153,21 @@ if __name__ == '__main__':
     def GetRandomAnime():
         try:
             rand_index = randint(0, len(list_titles)-1)
-            return "{}".format(list_titles[rand_index]), \
-                ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
-                list_coverImg[rand_index]
+            if values['-useXML-'] == True:
+                return "{}".format(list_titles[rand_index]), \
+                    ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
+                    XMLgetCoverURL[list_id[rand_index]]
+            else:
+                return "{}".format(list_titles[rand_index]), \
+                    ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
+                    list_coverImg[rand_index]
         except:
             # on an error, the randomizer returns Naruto.
             return "Error: Failed to get anime from PTW list.", \
                 "https://myanimelist.net/anime/20", \
                 "https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"
 
+    # Returns png image of the cover art from the URL.
     def GetCoverArt(coverURL):
         try:
             url = coverURL
@@ -212,10 +242,10 @@ if __name__ == '__main__':
         if event == 'Randomize!':
             if values['-useXML-'] == True:
                 try:
-                    XMLgetAnimeList(values['-XMLfileInput-']) # Assuming this is a file, not a path
+                    XMLgetAnimeList(values['-XMLfileInput-'])
                 except:
                     window['-OUTPUT-'].update("Error: Failed to parse XML file.")
-                if not list_titles and not list_id and not list_coverImg:
+                if not list_titles and not list_id: # if the lists are empty after parsing the xml
                     window['-OUTPUT-'].update("Error: No anime found in XML file.")
                 else:
                     Rnd_title, Rnd_url, Rnd_img = GetRandomAnime()
