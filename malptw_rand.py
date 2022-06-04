@@ -5,12 +5,15 @@
 # Update readme with pictures
 #
 # Test with: Debian / fresh python install / no internet.
+# Test with empty ptw list.
+# Test if no_movies and only_movies are working correctly.
+# Test if prevAPIcall is working correctly when username changes or settings are changed.
 #
 # PySimpleGUI:
 #   Add xml selection.
 #   Add randomize button XML function.
 #   Improve output formatting, aspect.
-#       Add cover art.
+#       Add placeholder cover art.
 #       Add link to MAL page/streaming.
 #
 # Use the API key from the GUI.
@@ -22,22 +25,17 @@
 #
 # narrow scope of imports to only what is needed.
 #
-# Remove console output before pull request.
+# Remove console output before pull request?
 
-#from argparse import ArgumentParser
-#from distutils.log import error
-#from msilib.schema import CheckBox
-from tabnanny import check
+from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
 import PySimpleGUI as Gooey
+from random import randint
+from config import API_key
 from time import sleep
-from cmd import PROMPT
 from PIL import Image
 import requests
-import config
-import random
 import glob
-import json
 import io
 
 
@@ -61,7 +59,7 @@ if __name__ == '__main__':
         try:
             url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
                 '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
-            headers = {'X-MAL-CLIENT-ID': config.API_key}
+            headers = {'X-MAL-CLIENT-ID': API_key}
             sleep(0.7)  # Sleep to prevent rate limiting.
             response = requests.get(url, headers=headers)            
             if response.status_code != 200:
@@ -73,7 +71,7 @@ if __name__ == '__main__':
                   str(response.status_code) + "\n")
             window['-OUTPUT-'].update("Error: API call failed.")
             return 
-        outputDict = json.loads(responseString)
+        outputDict = jsonLoads(responseString) # convert response to dictionary
 
         # This block poulates the list objects from the API response.
         def gen_dict_extract(var, key):
@@ -103,7 +101,7 @@ if __name__ == '__main__':
     # Returns a tuple with the title, MAL page, and URL for the cover art.
     def GetRandomAnime():
         try:
-            rand_index = random.randint(0, len(list_titles)-1)
+            rand_index = randint(0, len(list_titles)-1)
             return "{}".format(list_titles[rand_index]), \
                 ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
                 list_coverImg[rand_index]
