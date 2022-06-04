@@ -8,9 +8,10 @@
 # Test if no_movies and only_movies are working correctly.
 #  or rename only_movies to exclude_tv shows isntead.
 #
-# PySimpleGUI:
-#   Add xml selection.
-#   Add randomize button XML function.
+# XML:
+#   XML files do not contain cover art links,
+#    so currently GetRandomAnime() breaks in XML mode. 
+#    so might need to use the API to get the cover art.
 #
 #   Improve output formatting, style.
 #       Add placeholder cover art?
@@ -34,7 +35,6 @@ from config import API_key
 from time import sleep
 from PIL import Image # pip isntall pillow
 import requests
-import glob
 import io
 
 
@@ -48,8 +48,9 @@ if __name__ == '__main__':
     prevAPIcall = ""
 
 # ------------------------------------------------------------------------------
-# API Functions
+# API Functions - Maintain feature parity with XML functions.
 # ------------------------------------------------------------------------------
+
     # Pull user's animelist by calling the MAL API, save the response to a dictionary.
     def APIgetAnimeList(user_name):
         global prevAPIcall
@@ -98,6 +99,27 @@ if __name__ == '__main__':
                 list_id.pop()
                 list_coverImg.pop()
         prevAPIcall = user_name
+
+# ------------------------------------------------------------------------------
+# XML Functions - Maintain feature parity with API functions.
+# ------------------------------------------------------------------------------
+
+    # Pull anime list from MAL xml file, save directly to lists.
+    def XMLgetAnimeList(XMLfile):
+        list_tree = ET.parse(XMLfile)
+        tree_root = list_tree.getroot()
+        for anime in tree_root.findall("anime"):# from each <anime> in the xml...
+            if anime.find("my_status").text == "Plan to Watch":# where my_status == PTW...
+                list_titles.append(anime.find("series_title").text +  # append the series_title to ptw_list...
+                                " [" + anime.find("series_type").text + "]")  # also include its series_type...
+                list_id.append(anime.find("series_animedb_id").text)# then, append its series_animedb_id to ptw_list_id.
+                if (anime.find("series_type").text == "Movie") and (no_movies == True):
+                    list_titles.pop()
+                    list_id.pop()
+                if (anime.find("series_type").text != "Movie") and (only_movies == True):
+                    list_titles.pop()
+                    list_id.pop()
+        
 
 # ------------------------------------------------------------------------------
 # Output Functions
@@ -189,13 +211,22 @@ if __name__ == '__main__':
             exit()
         if event == 'Randomize!':
             if values['-useXML-'] == True:
-                # XML not implemented yet.
-                break
+                try:
+                    XMLgetAnimeList(values['-XMLfileInput-']) # Assuming this is a file, not a path
+                except:
+                    window['-OUTPUT-'].update("Error: Failed to parse XML file.")
+                if not list_titles and not list_id and not list_coverImg:
+                    window['-OUTPUT-'].update("Error: No anime found in XML file.")
+                else:
+                    Rnd_title, Rnd_url, Rnd_img = GetRandomAnime()
+                    window['-OUTPUT_IMG-'].update(Rnd_img)
+                    window['-OUTPUT-'].update(Rnd_title)
             else:  # use API.
                 try:
                     APIgetAnimeList(values['-username-'])
                 except: # if the API call fails, return Naruto.
-                    window['-OUTPUT_IMG-'].update(GetCoverArt("https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"))
+                    window['-OUTPUT_IMG-'].update(GetCoverArt( \
+                        "https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"))
                     continue
                 if not list_titles and not list_id and not list_coverImg:# if the list is empty after API call
                     prevAPIcall = values['-username-']
@@ -209,41 +240,3 @@ if __name__ == '__main__':
             with open('config.py', 'w') as file:
                 file.write("API_key = \"" + API_key + "\"")
     window.close()
-# ------------------------------------------------------------------------------
-# XML Functions
-# ------------------------------------------------------------------------------
-
-    # Prompt user to pick an .xml file from the working directory.
-    ListOfXML = (glob.glob('*.xml'))
-    while True:
-        print('Select an xml file:')
-        i = int(0)
-        for each in ListOfXML:
-            print(i, ':', ListOfXML[i])
-            i = (i+1)
-        choice = input()
-        try:
-            choice = int(choice)
-            break
-        except ValueError:
-            print("Invalid input!\n")
-    selectedMALfile = ListOfXML[choice]
-    print(selectedMALfile, ' selected.\n')
-    list_tree = ET.parse(selectedMALfile)
-    tree_root = list_tree.getroot()
-
-    # This block populates the list objects from the local xml file.
-    # from each <anime> in the xml...
-    for anime in tree_root.findall("anime"):
-        # where my_status == PTW...
-        if anime.find("my_status").text == "Plan to Watch":
-            list_titles.append(anime.find("series_title").text +  # append the series_title to ptw_list...
-                               " [" + anime.find("series_type").text + "]")  # also include its series_type...
-            # then, append its series_animedb_id to ptw_list_id.
-            list_id.append(anime.find("series_animedb_id").text)
-            if (anime.find("series_type").text == "Movie") and (no_movies == "y"):
-                list_titles.pop()
-                list_id.pop()
-            if (anime.find("series_type").text != "Movie") and (only_movies == "y"):
-                list_titles.pop()
-                list_id.pop()
