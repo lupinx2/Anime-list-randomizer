@@ -20,6 +20,7 @@
 #       Enter button to randomize
 # 
 #  Add manga support?
+#  pick one, Cover, CoverArt, or img; not all three.
 #
 #  Add non-Naruto based exception handling.
 #    no, but seriously the exception handling is a mess.
@@ -142,7 +143,8 @@ if __name__ == '__main__':
             responseString = responseBytes.decode("utf-8")
         except:
             window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
-        return jsonLoads(responseString).item['main_picture']['medium']
+        outputDict = jsonLoads(responseString)
+        return outputDict['main_picture']['medium']
         
 
 # ------------------------------------------------------------------------------
@@ -156,7 +158,7 @@ if __name__ == '__main__':
             if values['-useXML-'] == True:
                 return "{}".format(list_titles[rand_index]), \
                     ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
-                    XMLgetCoverURL[list_id[rand_index]]
+                    XMLgetCoverURL(list_id[rand_index])
             else:
                 return "{}".format(list_titles[rand_index]), \
                     ('https://myanimelist.net/anime/' + str(list_id[rand_index])), \
@@ -240,7 +242,7 @@ if __name__ == '__main__':
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             exit()
         if event == 'Randomize!':
-            if values['-useXML-'] == True:
+            if values['-useXML-'] == True: # use local XML file
                 try:
                     XMLgetAnimeList(values['-XMLfileInput-'])
                 except:
@@ -248,8 +250,8 @@ if __name__ == '__main__':
                 if not list_titles and not list_id: # if the lists are empty after parsing the xml
                     window['-OUTPUT-'].update("Error: No anime found in XML file.")
                 else:
-                    Rnd_title, Rnd_url, Rnd_img = GetRandomAnime()
-                    window['-OUTPUT_IMG-'].update(Rnd_img)
+                    Rnd_title, Rnd_url, Rnd_CoverURL = GetRandomAnime()
+                    window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
                     window['-OUTPUT-'].update(Rnd_title)
             else:  # use API.
                 try:
@@ -262,9 +264,9 @@ if __name__ == '__main__':
                     prevAPIcall = values['-username-']
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
                 else: # if the API call was successful 
-                    Rnd_title, Rnd_link, Rnd_CoverArt = GetRandomAnime()
+                    Rnd_title, Rnd_link, Rnd_CoverURL = GetRandomAnime()
                     window['-OUTPUT-'].update(Rnd_title)
-                    window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
+                    window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
         if event in ('-SAVE-'):
             API_key = values['apiKeyInput']
             with open('config.py', 'w') as file:
