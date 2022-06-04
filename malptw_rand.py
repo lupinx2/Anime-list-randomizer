@@ -137,7 +137,7 @@ if __name__ == '__main__':
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
                     Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
                     Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
-                   [Gooey.Image(key="-OUTPUT_IMG-"), Gooey.Text("this is the output object", size=(40, 2), key='-OUTPUT-')]]
+                   [Gooey.Image(key="-OUTPUT_IMG-"), Gooey.Text("", size=(40, 2), key='-OUTPUT-')]]
     # The settings tab.
     tab2_layout = [[Gooey.T('Your API Key:')],
                    [Gooey.In(key='apiKeyInput', password_char='●'), Gooey.Button('Save', key='-SAVE-')],
@@ -181,7 +181,8 @@ if __name__ == '__main__':
                     window['-OUTPUT-'].update(Rnd_title)
                     window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverArt))
                 else:
-                    window['-OUTPUT-'].update("Error: No anime found in list.")
+                    prevAPIcall = values['-username-']
+                    window['-OUTPUT-'].update("Error: No anime found in PTW list.")
         if event in ('-SAVE-'):
             API_key = values['apiKeyInput']
             with open('config.py', 'w') as file:
