@@ -16,11 +16,9 @@
 #       Add placeholder cover art?
 #       Add link to MAL page/streaming.
 #       Make cover art clickable?
-#       Force cover art dimensions.
+#       Enter button to randomize
 #
 # rename variables to be less confusing.
-#
-# Handle all errors in the GUI with user friendly messages.
 #
 # Remove console output before pull request?
 
@@ -112,7 +110,7 @@ if __name__ == '__main__':
             # on an error, the randomizer returns Naruto.
             return "Error: Failed to get anime from PTW list.", \
                 "https://myanimelist.net/anime/20", \
-                "https://cdn.myanimelist.net/images/anime/13/17405l.jpg"
+                "https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"
 
     def GetCoverArt(coverURL):
         try:
@@ -143,7 +141,7 @@ if __name__ == '__main__':
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
                      Gooey.Radio("Only Movies", 666, False, False, key='-only_Movies-'),
                      Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
-                   [Gooey.Image(key="-OUTPUT_IMG-"), Gooey.Text("", size=(40, 2), key='-OUTPUT-')]]
+                   [Gooey.Image(key="-OUTPUT_IMG-",size=(61,85)), Gooey.Text("", size=(40, 2), key='-OUTPUT-')]]
     # The settings tab.
     tab2_layout = [[Gooey.T('Your API Key:')],
                    [Gooey.In(key='-apiKeyInput-', password_char='●', right_click_menu=[[''], ['Paste API key']]),
@@ -183,13 +181,13 @@ if __name__ == '__main__':
             exit()
         if event == 'Randomize!':
             if values['-useXML-'] == True:
-                # do nothing
+                # XML not implemented yet.
                 break
             else:  # use API.
                 try:
                     APIgetAnimeList(values['-username-'])
-                except:
-                    window['-OUTPUT_IMG-'].update(GetCoverArt("https://cdn.myanimelist.net/images/anime/13/17405l.jpg"))
+                except: # if the API call fails, return Naruto.
+                    window['-OUTPUT_IMG-'].update(GetCoverArt("https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"))
                     continue
                 if not list_titles and not list_id and not list_coverImg:# if the list is empty after API call
                     prevAPIcall = values['-username-']
