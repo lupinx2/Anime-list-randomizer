@@ -4,21 +4,15 @@
 # TODO
 # Update readme with pictures
 #
-# Test with: fresh python install / no internet.
+# Test with no internet.
 # Test if no_movies and only_movies are working correctly.
-#  or rename only_movies to exclude_tv shows isntead.
 #
 #   Improve output formatting, style.
 #       Add placeholder cover art?
 #       Add link to MAL page/streaming.
 #       Make cover art clickable?
-#       Enter button to randomize
 # 
 #  Add manga support?
-#
-#  Add non-Naruto based exception handling.
-#    no, but seriously the exception handling is a mess.
-#    make every except clause pass an error code to a function that prints the error.
 #
 #  preserve some settings between runs (e.g. xml file), use config file.
 #
@@ -210,7 +204,7 @@ if __name__ == '__main__':
             [Gooey.Tab('Main', tab1_layout),
               Gooey.Tab('Settings', tab2_layout)]
         ])],
-        [Gooey.Push(), Gooey.Button('Randomize!'), Gooey.Button(
+        [Gooey.Push(), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button(
             'Exit')]  # The buttons at the bottom
     ]
     window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
