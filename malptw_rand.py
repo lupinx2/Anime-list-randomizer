@@ -2,18 +2,14 @@
 # Using either the API or a local xml file.
 #
 # TODO
-# Update readme with pictures
 #
 # crashes if trying to use the xml method with no internet.
-# no_movies and only_movies are not working correctly.
+# no_movies and only_movies are not working at all.
 # Forced image size is not working correctly.
 # what happens if an anime has no picture?
 #
 # Add link to MAL page/streaming.
 # Make cover art clickable?
-# show info (episodes, duration, rating, genres?/themes?)
-# show Mean score
-# Manga mode??? probably not.
 #
 # API method:
 #  1 per-username API call to get the list
