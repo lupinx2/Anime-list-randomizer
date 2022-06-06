@@ -4,7 +4,6 @@
 # TODO
 #
 # update requirements in readme.
-# you should be able to use the XML method with no internet.
 # Force cover art image size to avoid window resizing.
 #
 # API method:
@@ -130,10 +129,7 @@ if __name__ == '__main__':
         sleep(0.5)  # Sleep to prevent rate limiting.
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
-            if response.status_code == 404:
-                raise Exception('No aditional info found')
-            else:
-                raise Exception('API call failed Status code: ' + str(response.status_code))
+            return '', '?', '?', '0', '?', '?'
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
@@ -331,7 +327,10 @@ if __name__ == '__main__':
                 if (values['-showScore-'] == True):
                     window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
                 if (values['-showInfo-'] == True):
-                    window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
+                    if (type(Rnd_duration) == int): 
+                        window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
+                    else:
+                        window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes.")
                     window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
                     window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
             except:
