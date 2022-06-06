@@ -4,6 +4,7 @@ Randomly selects an anime listing from your MAL plan to watch section.
 ## Requirements
 - Python 3.2+
 - An .xml file or MAL API key
+- pysimplegui (`pip install pysimplegui`)  
 
 ## How to get your exported XML MAL file
 Go to your MAL anime list page and locate the sidebar on the right. Then click the `Export` button.
@@ -42,12 +43,15 @@ Click the `Edit` button and you should see the same form again with a new string
 
 **NOTE: Sharing your Client ID runs the risk that others might use it badly and you get in trouble for it; treat it like you would a password.**
 
-Now that you have your API key, open the `config.py` file in any text editor (Notepad will do) and paste it inside the quotes, replacing the placeholder asterisks.
+Now that you have your API key, run the program (see Usage below) and go to the settings tab, paste your API Key and hit save, this will save it to the `config.py` file, so you don't have to enter it again every time you open the program.  
+
+You can also manually paste it into the file using any text editor like notepad.
 
 ![Config file](https://i.ibb.co/prwnmh4/image.png)
 
 ## Usage
-First clone/download this repo and make sure to follow the steps above to either get your XML MAL file or API Key.
+First clone/download this repo (the download on this website is hidden behind a button labeled `code`)  
+Make sure to follow the steps above to either get your XML MAL file or API Key.
 
 If you're on Windows, you can just double-click the `run-malptw_rand.bat` file.
 
