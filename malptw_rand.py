@@ -4,24 +4,20 @@
 # TODO
 #
 # crashes if trying to use the xml method with no internet.
-# no_movies and only_movies are not working at all.
 # Forced image size is not working correctly.
 # what happens if an anime has no picture?
-#
-# Add link to MAL page/streaming.
-# Make cover art clickable?
 #
 # API method:
 #  1 per-username API call to get the list
 #  1 per-anime API call to get picture
 #  1 per-anime API call to get the anime info
-#  total 1 second sleep per anime
+#  total 1 seconds sleep per anime
 #
 # XML method:
 #  0 API calls to get the list
 #  2 per-anime API calls to get picture
 #  1 per-anime API call to get the anime info
-#  total 1.4 second sleep per anime
+#  total 1.4 seconds sleep per anime
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
@@ -30,6 +26,7 @@ from random import randint
 from config import API_key
 from time import sleep
 from PIL import Image # pip isntall pillow
+import webbrowser
 import requests
 import io
 
@@ -43,6 +40,11 @@ if __name__ == '__main__':
     only_movies = False
     prevAPIcall = ""
     prevXMLfile = ""
+    MALURL = "https://myanimelist.net/"
+    pil_im = Image.open('designismypassion.png')
+    d = io.BytesIO()
+    pil_im.save(d, 'png')
+    default_png = d.getvalue()
 
 # ------------------------------------------------------------------------------
 # General Functions
@@ -242,7 +244,7 @@ if __name__ == '__main__':
    
     Gooey.theme('LightGrey1')
     # Output Coumns
-    col_left = [[Gooey.Image('designismypassion.png', key="-OUTPUT_IMG-",size=(200,300))]]
+    col_left = [[Gooey.Button(image_data=default_png, key="-OUTPUT_IMG-",image_size=(200,278))]]
     col_rite = [[Gooey.Text("", font='Verdana 12 bold', size=(33, 2), key='-OUTPUT-')],
                 [Gooey.Text("", font='Verdana 11', size=(15, 1), key='-OUTPUT_score-')],
                 [Gooey.Text("", font='Verdana 11', size=(45, 1), key='-OUTPUT_duration-')],
@@ -251,9 +253,9 @@ if __name__ == '__main__':
     # The main tab.
     tab1_layout = [[Gooey.Text('MAL username:'),
                      Gooey.InputText(key='-username-', right_click_menu=[[''], ['Paste Username']])],
-                   [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
-                     Gooey.Radio("Only Movies/OVA", 666, False, False, key='-only_Movies-'),
-                     Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],
+                   [Gooey.Radio("Exclude Movies", 666, default=False, disabled=False, enable_events=True, key='-no_Movies-'),  # Radio buttons
+                     Gooey.Radio("Only Movies/OVA", 666, default=False, disabled=False, enable_events=True, key='-only_Movies-'),
+                     Gooey.Radio("Any anime", 666, default=True, disabled=False, enable_events=True, key='-any_Anime-')],
                     [Gooey.Column(col_left), Gooey.Column(col_rite)]]  # <-default selection
     # The settings tab.
     tab2_layout = [[Gooey.Push(), Gooey.T('API Key:'),
@@ -297,6 +299,8 @@ if __name__ == '__main__':
             API_key = values['-apiKeyInput-']
             with open('config.py', 'w') as file:
                 file.write("API_key = \"" + API_key + "\"")
+        if event in ('-OUTPUT_IMG-'):
+            webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
             if values['-useXML-'] == True: # use local XML file
                 try:
@@ -320,8 +324,9 @@ if __name__ == '__main__':
             Rnd_title, Rnd_id, Rnd_CoverURL = GetRandomAnime()
             Rnd_english, Rnd_mean, Rnd_episodes, Rnd_duration, Rnd_rating, Rnd_genres = GetAnimeInfo(Rnd_id)
             ClearOutput()
+            MALURL = 'https://myanimelist.net/anime/' + str(Rnd_id)
             window['-OUTPUT-'].update(Rnd_title)
-            window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
+            window['-OUTPUT_IMG-'].update(image_data=GetCoverArt(Rnd_CoverURL))
             if (values['-showEng-'] == True) and (Rnd_english != ''):
                 window['-OUTPUT-'].update(Rnd_english)
             if (values['-showScore-'] == True):
