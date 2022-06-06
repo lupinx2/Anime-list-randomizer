@@ -4,19 +4,18 @@
 # TODO
 # Update readme with pictures
 #
-# Test with no internet.
-# Test if no_movies and only_movies are working correctly.
+# crashes if trying to use the xml method with no internet.
+# no_movies and only_movies are not working correctly.
+# Forced image size is not working correctly.
 #
-#   Improve output formatting, style.
-#       Add placeholder cover art?
-#       Add link to MAL page/streaming.
-#       Make cover art clickable?
-# 
-#  Add manga support?
+# Add link to MAL page/streaming.
+# Make cover art clickable?
+# show info (episodes, duration, rating, genres?/themes?)
+# show English
+# show Mean score
+# Manga mode??? probably not.
 #
 #  preserve some settings between runs (e.g. xml file), use config file.
-#
-#  Forced image size is not working correctly.
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
@@ -40,7 +39,7 @@ if __name__ == '__main__':
     prevXMLfile = ""
 
 # ------------------------------------------------------------------------------
-# API Functions - Maintain feature parity with XML functions.
+# API Functions
 # ------------------------------------------------------------------------------
 
     # Pull user's animelist by calling the MAL API, save the response to a dictionary.
@@ -62,14 +61,12 @@ if __name__ == '__main__':
                 raise Exception('API failed')
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
-    
-        # convert response to dictionary
         outputDict = jsonLoads(responseString)
         # Clear the lists when username or settings change
         list_titles.clear()
         list_id.clear()
         list_coverImg.clear()
-        # This block poulates the list objects from the API response.
+        # Populate the lists from the API response.
         def gen_dict_extract(var, key):
             if isinstance(var, dict):
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
@@ -95,7 +92,7 @@ if __name__ == '__main__':
         prevAPIcall = user_name
 
 # ------------------------------------------------------------------------------
-# XML Functions - Maintain feature parity with API functions.
+# XML Functions
 # ------------------------------------------------------------------------------
 
     # Pull anime list from MAL xml file, save directly to lists.
@@ -110,10 +107,10 @@ if __name__ == '__main__':
         # Populate the lists from the XML file.
         list_tree = ET.parse(XMLfile)
         tree_root = list_tree.getroot()
-        for anime in tree_root.findall("anime"):# from each <anime> in the xml...
+        for anime in tree_root.findall("anime"): # from each <anime> in the xml...
             if anime.find("my_status").text == "Plan to Watch":# where my_status == PTW...
-                list_titles.append(anime.find("series_title").text )  # append the series_title to ptw_list...
-                list_id.append(anime.find("series_animedb_id").text)# then, append its series_animedb_id to ptw_list_id.
+                list_titles.append(anime.find("series_title").text ) # append the series_title to ptw_list...
+                list_id.append(anime.find("series_animedb_id").text) # then, append its series_animedb_id to ptw_list_id.
                 if (anime.find("series_type").text == "Movie") and (no_movies == True):
                     list_titles.pop()
                     list_id.pop()
@@ -122,7 +119,7 @@ if __name__ == '__main__':
                     list_id.pop()
         prevXMLfile = XMLfile
 
-    # Get URL for cover art of a single anime, using the API.
+    # Get URL for cover art of a single anime, using the API. (Only way I could find to get the cover art.)
     def XMLgetCoverURL(animeID):
         
         url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
@@ -135,6 +132,7 @@ if __name__ == '__main__':
                 return
             else:
                 window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
+                raise Exception('API call failed')
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
@@ -168,12 +166,10 @@ if __name__ == '__main__':
         url = coverURL
         sleep(0.4)  # Sleep to prevent rate limiting.
         response = requests.get(url, stream=True)
-        response.raw.decode_content = True
-        # get jpg formated bytes from response
+        response.raw.decode_content = True# jpg format bytes from response
         jpg_img = Image.open(io.BytesIO(response.content))
         png_img = io.BytesIO()  # create BytesIO object to store png
-        # convert jpg data to png format
-        jpg_img.save(png_img, format="PNG")
+        jpg_img.save(png_img, format="PNG") # convert jpg data to png format
         png_data = png_img.getvalue()  # create return object
         return png_data
 
@@ -182,31 +178,31 @@ if __name__ == '__main__':
 # ------------------------------------------------------------------------------
    
     Gooey.theme('LightGrey1')
+    # Output Coumns
+    col_left = [[Gooey.Image('designismypassion.png', key="-OUTPUT_IMG-",size=(200,300))]]
+    col_rite = [[Gooey.Text("", font='Verdana 13 bold', size=(35, 2), key='-OUTPUT-')]]
     # The main tab.
     tab1_layout = [[Gooey.Text('MAL username:'),
                      Gooey.InputText(key='-username-', right_click_menu=[[''], ['Paste Username']])],
                    [Gooey.Radio("Exclude Movies", 666, False, False, key='-no_Movies-'),  # Radio buttons
                      Gooey.Radio("Only Movies/OVA", 666, False, False, key='-only_Movies-'),
-                     Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],  # <-default selection
-                   [Gooey.Image(key="-OUTPUT_IMG-",size=(61,85)), Gooey.Text("", font='Verdana 13 bold', size=(35, 2), key='-OUTPUT-')]]
+                     Gooey.Radio("Any anime", 666, True, False, key='-any_Anime-')],
+                    [Gooey.Column(col_left), Gooey.Column(col_rite)]]  # <-default selection
     # The settings tab.
-    tab2_layout = [[Gooey.T('Your API Key:'),
+    tab2_layout = [[Gooey.Push(), Gooey.T('API Key:'),
                      Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
                      Gooey.Button('Save', key='-SAVE-')],
                    [Gooey.Checkbox('Use local XML file', key='-useXML-', enable_events=True),
+                     Gooey.Push(), Gooey.T('XML file:'),
                      Gooey.Input(key='-XMLfileInput-'), Gooey.FileBrowse()],
                    [Gooey.Checkbox('Show mean score', key='-ShowScore-')],
-                   [Gooey.Checkbox('Show additional info', key='-ShowInfo-')], # episodes, duration, rating, (genres/themes?)
+                   [Gooey.Checkbox('Show additional info', key='-ShowInfo-')],
                    [Gooey.Checkbox('Show english title', key='-ShowEnglish-')]]
     # The main layout.
     layout = [
-        [Gooey.TabGroup([
-            [Gooey.Tab('Main', tab1_layout),
-              Gooey.Tab('Settings', tab2_layout)]
-        ])],
-        [Gooey.Push(), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button(
-            'Exit')]  # The buttons at the bottom
-    ]
+        [Gooey.TabGroup([[Gooey.Tab('Main', tab1_layout), 
+                          Gooey.Tab('Settings', tab2_layout)]])],
+        [Gooey.Push(), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
     window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
 
     # Loop listening for GUI events.
@@ -250,7 +246,8 @@ if __name__ == '__main__':
                     Rnd_title, Rnd_url, Rnd_CoverURL = GetRandomAnime()
                     window['-OUTPUT_IMG-'].update(GetCoverArt(Rnd_CoverURL))
                     window['-OUTPUT-'].update(Rnd_title)
-            else:  # use API.
+            else:
+                # use API.
                 try:
                     APIgetAnimeList(values['-username-'])
                 except:
@@ -267,4 +264,3 @@ if __name__ == '__main__':
             API_key = values['-apiKeyInput-']
             with open('config.py', 'w') as file:
                 file.write("API_key = \"" + API_key + "\"")
-    window.close()
