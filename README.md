@@ -3,7 +3,8 @@ Randomly selects an anime listing from your MAL plan to watch section.
 
 ## Requirements
 For the .exe version:  
-- An .xml file or MAL API key
+- An .xml file or MAL API key  
+  
 Aditionally, if you just download the repo:  
 - Python 3.2+  
 - pysimplegui (`pip install pysimplegui`)  
