@@ -25,6 +25,7 @@ from random import randint
 from config import API_key
 from time import sleep
 from PIL import Image # pip isntall pillow
+from sys import exit
 import webbrowser
 import requests
 import io
