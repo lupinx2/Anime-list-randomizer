@@ -21,15 +21,14 @@
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
 import PySimpleGUI as Gooey # pip isntall pysimplegui
+from os import getcwd, path
 from random import randint
-from config import API_key
 from time import sleep
 from PIL import Image # pip isntall pillow
 from sys import exit
 import webbrowser
 import requests
 import io
-
 
 if __name__ == '__main__':
 
@@ -45,6 +44,14 @@ if __name__ == '__main__':
     d = io.BytesIO()
     pil_im.save(d, 'png')
     default_png = d.getvalue()
+    CurrentDir = getcwd()
+    if not path.exists(CurrentDir + "/config.py"):
+        with open("config.py", "w+") as file:
+            file.write("API_key = \"******\"")
+        from config import API_key
+    else:
+        from config import API_key
+    
 
 # ------------------------------------------------------------------------------
 # General Functions
@@ -290,7 +297,7 @@ if __name__ == '__main__':
             SettingsChanged()
         if event in ('-SAVE-'):
             API_key = values['-apiKeyInput-']
-            with open('config.py', 'w') as file:
+            with open('config.py', 'w+') as file:
                 file.write("API_key = \"" + API_key + "\"")
         if event in ('-OUTPUT_IMG-'):
             webbrowser.open_new_tab(MALURL)
