@@ -2,8 +2,10 @@
 Randomly selects an anime listing from your MAL plan to watch section.
 
 ## Requirements
-- Python 3.2+
+For the .exe version:  
 - An .xml file or MAL API key
+Aditionally, if you just download the repo:  
+- Python 3.2+  
 - pysimplegui (`pip install pysimplegui`)  
 
 ## How to get your exported XML MAL file
@@ -50,12 +52,14 @@ You can also manually paste it into the file using any text editor like notepad.
 ![Config file](https://i.ibb.co/prwnmh4/image.png)
 
 ## Usage
-First clone/download this repo (the download on this website is hidden behind a button labeled `code`)  
-Make sure to follow the steps above to either get your XML MAL file or API Key.
+Make sure to follow the steps above to either get your XML MAL file or API Key.  
+The easiest way to use this is to download the mal-randomizer.exe release to a folder and double clicking it.  
 
-If you're on Windows, you can just double-click the `run-malptw_rand.bat` file.
+If a .exe file doesn't suit your needs (or you don't trust them), you can just clone/download this repo  
+(the download on this website is hidden behind a button labeled `code`)  
 
-If you're not on Windows, or would prefer to use a terminal just `cd` into the repo folder. Then type:
+Then if you're on Windows, just double-click the `run-malptw_rand.bat` file.  
+If you're not on Windows, or would prefer to use a terminal just `cd` into the repo folder. Then type:  
 
 `python malptw_rand.py` or `python3 malptw_rand.py`
 
