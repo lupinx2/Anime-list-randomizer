@@ -48,10 +48,11 @@ if __name__ == '__main__':
     if not path.exists(CurrentDir + "/config.py"):
         with open("config.py", "w+") as file:
             file.write("API_key = \"******\"")
-        from config import API_key
-    else:
-        from config import API_key
-    
+            file.close()
+    with open("config.py", "r") as file:
+        API_key = file.read(-1)
+        API_key = API_key[11:-1]
+        file.close()
 
 # ------------------------------------------------------------------------------
 # General Functions
