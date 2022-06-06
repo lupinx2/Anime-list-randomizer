@@ -3,9 +3,9 @@
 #
 # TODO
 #
-# crashes if trying to use the xml method with no internet.
-# Forced image size is not working correctly.
-# what happens if an anime has no picture?
+# update requirements in readme.
+# you should be able to use the XML method with no internet.
+# Force cover art image size to avoid window resizing.
 #
 # API method:
 #  1 per-username API call to get the list
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 # General Functions
 # ------------------------------------------------------------------------------
 
-    # Yields every value in a dict where its key matches the argument
+    # Yields every value in a dict where its key matches the argument.
     def gen_dict_extract(var, key):
             if isinstance(var, dict):
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
@@ -97,35 +97,33 @@ if __name__ == '__main__':
 
     # Returns a tuple with the title, MAL page, and cover art URL from the list.
     def GetRandomAnime():
-        try:
-            rand_index = randint(0, len(list_titles)-1)
-            if values['-useXML-'] == True:
-                return "{}".format(list_titles[rand_index]), \
-                    list_id[rand_index], \
-                    XMLgetCoverURL(list_id[rand_index])
-            else:
-                return "{}".format(list_titles[rand_index]), \
-                    list_id[rand_index], \
-                    list_coverImg[rand_index]
-        except:
-            # on an error, the randomizer returns Naruto.
-            return "Error: Failed to get anime from PTW list.", \
-                "https://myanimelist.net/anime/20", \
-                "https://api-cdn.myanimelist.net/images/anime/13/17405l.jpg"
+        rand_index = randint(0, len(list_titles)-1)
+        if values['-useXML-'] == True:
+            return "{}".format(list_titles[rand_index]), \
+                list_id[rand_index], \
+                XMLgetCoverURL(list_id[rand_index])
+        else:
+            return "{}".format(list_titles[rand_index]), \
+                list_id[rand_index], \
+                list_coverImg[rand_index]
+
 
     # Returns png image of the cover art from the URL.
     def GetCoverArt(coverURL):
-        url = coverURL
-        sleep(0.5)  # Sleep to prevent rate limiting.
-        response = requests.get(url, stream=True)
-        response.raw.decode_content = True# jpg format bytes from response
-        jpg_img = Image.open(io.BytesIO(response.content))
-        png_img = io.BytesIO()  # create BytesIO object to store png
-        jpg_img.save(png_img, format="PNG") # convert jpg data to png format
-        png_data = png_img.getvalue()
-        return png_data
+        try:
+            url = coverURL
+            sleep(0.5)  # Sleep to prevent rate limiting.
+            response = requests.get(url, stream=True)
+            response.raw.decode_content = True # Get jpg format bytes from response...
+            jpg_img = Image.open(io.BytesIO(response.content)) # open PIL image from bytes...
+            png_img = io.BytesIO()  # create BytesIO object to store png...
+            jpg_img.save(png_img, format="PNG") # save data in png format...
+            png_data = png_img.getvalue() # save as bytes.
+            return png_data
+        except:
+            return default_png
     
-    # Returns a tuple with english title, mean score, #of episodes, duration in seconds, rating, and genres
+    # Returns a tuple with english title, mean score, #of episodes, duration in seconds, rating, and genres.
     def GetAnimeInfo(animeID):
         url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=alternative_titles,mean,num_episodes,average_episode_duration,rating,genres'
         headers = {'X-MAL-CLIENT-ID': API_key}
@@ -139,7 +137,7 @@ if __name__ == '__main__':
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
-        genreString = "" # make a string out of all the genres
+        genreString = "" # Make a string out of all the genres.
         for item in gen_dict_extract(outputDict, 'name'): 
             genreString = genreString + ("/ " + item + " ")
         return outputDict['alternative_titles']['en'], \
@@ -156,7 +154,7 @@ if __name__ == '__main__':
     # Pull user's animelist by calling the MAL API, save the response to a dictionary.
     def APIgetAnimeList(user_name):
         global prevAPIcall
-        if user_name == prevAPIcall:  # prevents redundant API calls
+        if user_name == prevAPIcall:  # Prevents redundant API calls.
             return
         url = 'https://api.myanimelist.net/v2/users/' + str(user_name) +\
             '/animelist?fields=list_status,media_type&status=plan_to_watch&limit=1000'  # 1000 is the max allowed by MAL.
@@ -173,7 +171,7 @@ if __name__ == '__main__':
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
-        # Clear the lists when username or settings change
+        # Clear the lists when username or settings change.
         list_titles.clear()
         list_id.clear()
         list_coverImg.clear()
@@ -193,13 +191,13 @@ if __name__ == '__main__':
         prevAPIcall = user_name
 
 # ------------------------------------------------------------------------------
-# XML Functions - only called when using the XML method.
+# XML Functions - only called when using the XML method
 # ------------------------------------------------------------------------------
 
     # Pull anime list from MAL xml file, save directly to lists.
     def XMLgetAnimeList(XMLfile):
         global prevXMLfile
-        if XMLfile == prevXMLfile: # prevents redundant XML parsing
+        if XMLfile == prevXMLfile: # Prevents redundant XML parsing.
             return
         # Clear the lists when username or settings change
         list_titles.clear()
@@ -208,7 +206,7 @@ if __name__ == '__main__':
         # Populate the lists from the XML file.
         list_tree = ET.parse(XMLfile)
         tree_root = list_tree.getroot()
-        for anime in tree_root.findall("anime"): # from each <anime> in the xml...
+        for anime in tree_root.findall("anime"): # From each <anime> in the xml...
             if anime.find("my_status").text == "Plan to Watch":# where my_status == PTW...
                 list_titles.append(anime.find("series_title").text ) # append the series_title to ptw_list...
                 list_id.append(anime.find("series_animedb_id").text) # then, append its series_animedb_id to ptw_list_id.
@@ -222,28 +220,26 @@ if __name__ == '__main__':
 
     # Get URL for cover art of a single anime, using the API. (Only way I could find to get the cover art.)
     def XMLgetCoverURL(animeID):
-        url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
-        headers = {'X-MAL-CLIENT-ID': API_key}
-        sleep(0.5)  # Sleep to prevent rate limiting.
-        response = requests.get(url, headers=headers)            
-        if response.status_code != 200:
-            if response.status_code == 404:
-                window.Element('-OUTPUT-').Update('Error: cover art not found.')
-                return
-            else:
-                window.Element('-OUTPUT-').Update("Error: API call failed Status code: " + str(response.status_code))
-                raise Exception('API call failed')
-        responseBytes = (response.content)
-        responseString = responseBytes.decode("utf-8")
-        outputDict = jsonLoads(responseString)
-        return outputDict['main_picture']['medium']
+        try:
+            url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
+            headers = {'X-MAL-CLIENT-ID': API_key}
+            sleep(0.5)  # Sleep to prevent rate limiting.
+            response = requests.get(url, headers=headers)            
+            if response.status_code != 200:
+                return ''
+            responseBytes = (response.content)
+            responseString = responseBytes.decode("utf-8")
+            outputDict = jsonLoads(responseString)
+            return outputDict['main_picture']['medium']
+        except:
+            return ''
         
 # ------------------------------------------------------------------------------
 # GUI
 # ------------------------------------------------------------------------------
    
     Gooey.theme('LightGrey1')
-    # Output Coumns
+    # Output Columns.
     col_left = [[Gooey.Button(image_data=default_png, key="-OUTPUT_IMG-",image_size=(200,278))]]
     col_rite = [[Gooey.Text("", font='Verdana 12 bold', size=(33, 2), key='-OUTPUT-')],
                 [Gooey.Text("", font='Verdana 11', size=(15, 1), key='-OUTPUT_score-')],
@@ -253,10 +249,10 @@ if __name__ == '__main__':
     # The main tab.
     tab1_layout = [[Gooey.Text('MAL username:'),
                      Gooey.InputText(key='-username-', right_click_menu=[[''], ['Paste Username']])],
-                   [Gooey.Radio("Exclude Movies", 666, default=False, disabled=False, enable_events=True, key='-no_Movies-'),  # Radio buttons
+                   [Gooey.Radio("Exclude Movies", 666, default=False, disabled=False, enable_events=True, key='-no_Movies-'),
                      Gooey.Radio("Only Movies/OVA", 666, default=False, disabled=False, enable_events=True, key='-only_Movies-'),
                      Gooey.Radio("Any anime", 666, default=True, disabled=False, enable_events=True, key='-any_Anime-')],
-                    [Gooey.Column(col_left), Gooey.Column(col_rite)]]  # <-default selection
+                   [Gooey.Column(col_left), Gooey.Column(col_rite)]]
     # The settings tab.
     tab2_layout = [[Gooey.Push(), Gooey.T('API Key:'),
                      Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
@@ -302,38 +298,45 @@ if __name__ == '__main__':
         if event in ('-OUTPUT_IMG-'):
             webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
-            if values['-useXML-'] == True: # use local XML file
+            if values['-useXML-'] == True: # Use local XML file.
                 try:
                     XMLgetAnimeList(values['-XMLfileInput-'])
                 except:
                     window['-OUTPUT-'].update("Error: Failed to parse XML file.")
                     continue
-                if not list_titles and not list_id: # if the lists are empty after parsing the xml
+                if not list_titles and not list_id: # If the lists are empty after parsing the xml.
                     window['-OUTPUT-'].update("Error: No anime found in XML file.")
                     continue
-            else:
-                # use API.
+            else: # Use only API calls.
                 try:
                     APIgetAnimeList(values['-username-'])
                 except:
                     window['-OUTPUT-'].update("Error: Failed to get anime list.")
                     continue
-                if not list_titles and not list_id and not list_coverImg:# if the list is empty after API call
+                if not list_titles and not list_id and not list_coverImg:# If the list is empty after API call.
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
                     continue
-            Rnd_title, Rnd_id, Rnd_CoverURL = GetRandomAnime()
-            Rnd_english, Rnd_mean, Rnd_episodes, Rnd_duration, Rnd_rating, Rnd_genres = GetAnimeInfo(Rnd_id)
-            ClearOutput()
-            MALURL = 'https://myanimelist.net/anime/' + str(Rnd_id)
-            window['-OUTPUT-'].update(Rnd_title)
-            window['-OUTPUT_IMG-'].update(image_data=GetCoverArt(Rnd_CoverURL))
-            if (values['-showEng-'] == True) and (Rnd_english != ''):
-                window['-OUTPUT-'].update(Rnd_english)
-            if (values['-showScore-'] == True):
-                window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
-            if (values['-showInfo-'] == True):
-                window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
-                window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
-                window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
+            try:
+                Rnd_title, Rnd_id, Rnd_CoverURL = GetRandomAnime()
+                Rnd_english, Rnd_mean, Rnd_episodes, Rnd_duration, Rnd_rating, Rnd_genres = GetAnimeInfo(Rnd_id)
+                ClearOutput()
+                window['-OUTPUT-'].update(Rnd_title)
+                MALURL = 'https://myanimelist.net/anime/' + str(Rnd_id)
+                if Rnd_CoverURL != '':
+                    window['-OUTPUT_IMG-'].update(image_data=GetCoverArt(Rnd_CoverURL))
+                else:
+                    window['-OUTPUT_IMG-'].update(image_data=default_png)
+                if (values['-showEng-'] == True) and (Rnd_english != ''):
+                    window['-OUTPUT-'].update(Rnd_english)
+                if (values['-showScore-'] == True):
+                    window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
+                if (values['-showInfo-'] == True):
+                    window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
+                    window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
+                    window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
+            except:
+                window['-OUTPUT-'].update("Error: Display error.")
+                window['-OUTPUT_IMG-'].update(image_data=default_png)
+                MALURL = 'https://myanimelist.net/'
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             exit()
