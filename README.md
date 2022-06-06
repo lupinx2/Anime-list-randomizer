@@ -59,12 +59,10 @@ The easiest way to use this is to download the mal-randomizer.exe release to a f
 If a .exe file doesn't suit your needs (or you don't trust them), you can just clone/download this repo  
 (the download on this website is hidden behind a button labeled `code`)  
 
-Then if you're on Windows, just double-click the `run-malptw_rand.bat` file.  
+Then if you're on Windows, just double-click the `run-mal-randomizer.bat` file.  
 If you're not on Windows, or would prefer to use a terminal just `cd` into the repo folder. Then type:  
 
-`python malptw_rand.py` or `python3 malptw_rand.py`
-
-to get a random anime from your PTW list.
+`python mal_randomizer.py` or `python3 mal_randomizer.py`
 
 ## FAQ
 
