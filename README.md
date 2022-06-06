@@ -45,7 +45,7 @@ Click the `Edit` button and you should see the same form again with a new string
 
 Now that you have your API key, run the program (see Usage below) and go to the settings tab, paste your API Key and hit save, this will save it to the `config.py` file, so you don't have to enter it again every time you open the program.  
 
-You can also manually paste it into the file using any text editor like notepad.
+You can also manually paste it into the file using any text editor like notepad.  
 
 ![Config file](https://i.ibb.co/prwnmh4/image.png)
 
