@@ -277,9 +277,10 @@ if __name__ == '__main__':
                    [Gooey.Checkbox('Use local XML file', key='-useXML-', enable_events=True),
                      Gooey.Push(), Gooey.T('XML file:'),
                      Gooey.Input(key='-XMLfileInput-'), Gooey.FileBrowse()],
-                   [Gooey.Checkbox('Show english title', key='-showEng-')],
-                   [Gooey.Checkbox('Show mean score', key='-showScore-')],
-                   [Gooey.Checkbox('Show additional info', key='-showInfo-')]]
+                   [Gooey.Checkbox('Show english title', default=False, key='-showEng-')],
+                   [Gooey.Checkbox('Show mean score', default=True, key='-showScore-')],
+                   [Gooey.Checkbox('Show duration', default=True, key='-showDuration-')],
+                   [Gooey.Checkbox('Show additional info', default=False,  key='-showInfo-')]]
     # The main layout.
     layout = [
         [Gooey.TabGroup([[Gooey.Tab('Main', tab1_layout), 
@@ -351,11 +352,12 @@ if __name__ == '__main__':
                     window['-OUTPUT-'].update(Rnd_english)
                 if (values['-showScore-'] == True):
                     window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
-                if (values['-showInfo-'] == True):
+                if (values['-showDuration-'] == True):
                     if (type(Rnd_duration) == int): 
                         window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
                     else:
                         window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes.")
+                if (values['-showInfo-'] == True):
                     window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
                     window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
             except:
