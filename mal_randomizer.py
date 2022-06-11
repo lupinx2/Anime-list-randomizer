@@ -25,9 +25,9 @@ from os import getcwd, path
 from random import randint
 from time import sleep
 from PIL import Image # pip isntall pillow
-from sys import exit
 import webbrowser
 import requests
+import sys
 import io
 
 if __name__ == '__main__':
@@ -40,15 +40,21 @@ if __name__ == '__main__':
     prevAPIcall = ""
     prevXMLfile = ""
     MALURL = "https://myanimelist.net/"
-    pil_im = Image.open('designismypassion.png')
+    CurrentDir = getcwd()
+    # default image when there is no cover art to display.
+    # this should work with auto-py-to-exe or pyinstaller.
+    default_pngPath = path.join((getattr(sys, '_MEIPASS', path.dirname(path.abspath('designismypassion.png')))), 'designismypassion.png')
+    pil_im = Image.open(default_pngPath)
     d = io.BytesIO()
     pil_im.save(d, 'png')
     default_png = d.getvalue()
-    CurrentDir = getcwd()
+    # if there is no config file, create one
     if not path.exists(CurrentDir + "/config.py"):
         with open("config.py", "w+") as file:
             file.write("API_key = \"******\"")
             file.close()
+    # manually reads the Api key from the config file instead of importing it...
+    # otherwise the value would be locked in when bundling the app.
     with open("config.py", "r") as file:
         API_key = file.read(-1)
         API_key = API_key[11:-1]
@@ -103,7 +109,7 @@ if __name__ == '__main__':
         window['-OUTPUT_genre-'].update("")
         
 
-    # Returns a tuple with the title, MAL page, and cover art URL from the list.
+    # Returns a tuple with the title, MAL page, and cover art URL from the lists.
     def GetRandomAnime():
         rand_index = randint(0, len(list_titles)-1)
         if values['-useXML-'] == True:
@@ -117,6 +123,7 @@ if __name__ == '__main__':
 
 
     # Returns png image of the cover art from the URL.
+    # makes 1 API call every time this function is called.
     def GetCoverArt(coverURL):
         try:
             url = coverURL
@@ -132,6 +139,7 @@ if __name__ == '__main__':
             return default_png
     
     # Returns a tuple with english title, mean score, #of episodes, duration in seconds, rating, and genres.
+    # makes 1 API call every time this function is called.
     def GetAnimeInfo(animeID):
         url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=alternative_titles,mean,num_episodes,average_episode_duration,rating,genres'
         headers = {'X-MAL-CLIENT-ID': API_key}
@@ -157,6 +165,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------------------------
 
     # Pull user's animelist by calling the MAL API, save the response to a dictionary.
+    # makes 1 API call every time this function is called.
     def APIgetAnimeList(user_name):
         global prevAPIcall
         if user_name == prevAPIcall:  # Prevents redundant API calls.
@@ -224,6 +233,7 @@ if __name__ == '__main__':
         prevXMLfile = XMLfile
 
     # Get URL for cover art of a single anime, using the API. (Only way I could find to get the cover art.)
+    # makes 1 API call every time this function is called.
     def XMLgetCoverURL(animeID):
         try:
             url = 'https://api.myanimelist.net/v2/anime/' + str(animeID) + '?fields=main_picture'
@@ -347,4 +357,4 @@ if __name__ == '__main__':
                 window['-OUTPUT_IMG-'].update(image_data=default_png)
                 MALURL = 'https://myanimelist.net/'
         if event in (Gooey.WIN_CLOSED, 'Exit'):
-            exit()
+            sys.exit(0)
