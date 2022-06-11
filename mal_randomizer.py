@@ -95,18 +95,20 @@ if __name__ == '__main__':
 
     # Call this whenever the user changes the settings, to make sure the lists are updated.
     def SettingsChanged():
-        global prevAPIcall
-        global prevXMLfile
+        global prevAPIcall, prevXMLfile
         prevAPIcall = ""
         prevXMLfile = ""
 
     # Clears the output before displaying the next anime.
     def ClearOutput():
+        global default_png, MALURL
+        window['-OUTPUT_IMG-'].update(image_data=default_png)
         window['-OUTPUT-'].update("")
         window['-OUTPUT_score-'].update("")
         window['-OUTPUT_duration-'].update("")
         window['-OUTPUT_rating-'].update("")
         window['-OUTPUT_genre-'].update("")
+        MALURL = 'https://myanimelist.net/'
         
 
     # Returns a tuple with the title, MAL page, and cover art URL from the lists.
@@ -313,22 +315,26 @@ if __name__ == '__main__':
         if event in ('-OUTPUT_IMG-'):
             webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
-            if values['-useXML-'] == True: # Use local XML file.
-                try:
+            if values['-useXML-'] == True:
+                try: # Use local XML file.
                     XMLgetAnimeList(values['-XMLfileInput-'])
                 except:
+                    ClearOutput()
                     window['-OUTPUT-'].update("Error: Failed to parse XML file.")
                     continue
                 if not list_titles and not list_id: # If the lists are empty after parsing the xml.
+                    ClearOutput()
                     window['-OUTPUT-'].update("Error: No anime found in XML file.")
                     continue
             else: # Use only API calls.
                 try:
                     APIgetAnimeList(values['-username-'])
                 except:
+                    ClearOutput()
                     window['-OUTPUT-'].update("Error: Failed to get anime list.")
                     continue
                 if not list_titles and not list_id and not list_coverImg:# If the list is empty after API call.
+                    ClearOutput()
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
                     continue
             try:
@@ -353,8 +359,7 @@ if __name__ == '__main__':
                     window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
                     window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
             except:
+                ClearOutput()
                 window['-OUTPUT-'].update("Error: Display error.")
-                window['-OUTPUT_IMG-'].update(image_data=default_png)
-                MALURL = 'https://myanimelist.net/'
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             sys.exit(0)
