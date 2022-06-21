@@ -309,6 +309,8 @@ if __name__ == '__main__':
             SettingsChanged()
         if event == '-useXML-':
             SettingsChanged()
+        if event == '-showInfo-':
+            SettingsChanged()
         if event in ('-SAVE-'):
             API_key = values['-apiKeyInput-']
             with open('config.py', 'w+') as file:
@@ -358,6 +360,8 @@ if __name__ == '__main__':
                     else:
                         window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes.")
                 if (values['-showInfo-'] == True):
+                    Rnd_rating = Rnd_rating.replace('_', ' ')
+                    Rnd_rating = Rnd_rating.upper() 
                     window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
                     window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
             except:
