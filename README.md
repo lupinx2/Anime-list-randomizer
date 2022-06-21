@@ -1,6 +1,8 @@
 # myanimelist-randomizer
 Randomly selects an anime listing from your MAL plan to watch section.
 
+![myannimelist-randomizer GUI](https://i.ibb.co/bFZXFRG/image.png)
+
 ## Requirements
 For the .exe version:  
 - An .xml file or MAL API key  
@@ -35,7 +37,7 @@ Fill out the form's required fields, I *recommend* putting in the following info
 **App Redirect URL:** `http://localhost/oauth`  
 **Homepage URL:** `https://github.com/lupinx2/myanimelist-randomizer`  
 **Commercial/Non-Commercial:** `Non-Commercial`  
-**Name/Company Name** Your MAL username  
+**Name/Company Name** [Your MAL username]  
 **Purpose of Use:** `Other`, or `Hobbyist` if you intend to edit this app.  
 
 Once you have clicked `Submit`, navigate back to the API tab of your MAL account settings, you should see a new button called `Edit`.
@@ -44,11 +46,11 @@ Once you have clicked `Submit`, navigate back to the API tab of your MAL account
 
 Click the `Edit` button and you should see the same form again with a new string of red text called `Client ID`, copy that string. 
 
-**NOTE: Sharing your Client ID runs the risk that others might use it badly and you get in trouble for it; treat it like you would a password.**
+**NOTE: Sharing your Client ID runs the risk that others might use it badly and you get in trouble; treat it like you would a password.**
 
-Now that you have your API key, run the program (see Usage below) and go to the settings tab, paste your API Key and hit save, this will save it to the `config.py` file, so you don't have to enter it again every time you open the program.  
+Now that you have your API key, run the program (see Usage below) and go to the settings tab, paste your API Key and hit Save, this will save it to the `config.py` file, so you don't have to enter it again every time you open the program.  
 
-You can also manually paste it into the file using any text editor like notepad.  
+If you want, you can also manually paste it into the file using any text editor like notepad.  
 
 ![Config file](https://i.ibb.co/prwnmh4/image.png)
 
