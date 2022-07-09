@@ -1,10 +1,16 @@
-# Returns a random anime from your MAL Plan-to-Watch list
+# Displays a random anime from your MAL Plan-to-Watch list
 # Using either the API or a local xml file.
 #
 # TODO
 #
 # update requirements in readme.
-# Force cover art image size to avoid window resizing.
+# split functions into multiple files.[]
+# Force cover art image size to avoid window resizing. []
+# prevent display error when api return is missing an expected key value pair  [x]
+# generally improve duartion string formatting. []
+# rating string should convert PG_13 to PG-13. [x]
+# back button.
+#
 #
 # API method:
 #  1 per-username API call to get the list
@@ -152,9 +158,22 @@ if __name__ == '__main__':
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
-        genreString = "" # Make a string out of all the genres.
+        # Make a string and append any genre tags to it.
+        genreString = ""
         for item in gen_dict_extract(outputDict, 'name'): 
             genreString = genreString + ("/ " + item + " ")
+        #Fill any missing information with default values.
+        if 'alternative_titles' not in outputDict:
+            outputDict['alternative_titles']['en'] = ''
+        if 'mean' not in outputDict:
+            outputDict['mean'] = '?'
+        if 'num_episodes' not in outputDict:
+            outputDict['num_episodes'] = '0'
+        if 'average_episode_duration' not in outputDict:
+            outputDict['average_episode_duration'] = '?'
+        if 'rating' not in outputDict:
+            outputDict['rating'] = '?'
+        #return the tuple using the values from the dict.
         return outputDict['alternative_titles']['en'], \
             outputDict['mean'], \
             outputDict['num_episodes'], \
@@ -344,24 +363,30 @@ if __name__ == '__main__':
                 Rnd_title, Rnd_id, Rnd_CoverURL = GetRandomAnime()
                 Rnd_english, Rnd_mean, Rnd_episodes, Rnd_duration, Rnd_rating, Rnd_genres = GetAnimeInfo(Rnd_id)
                 ClearOutput()
-                window['-OUTPUT-'].update(Rnd_title)
+                # update clickable image link.
                 MALURL = 'https://myanimelist.net/anime/' + str(Rnd_id)
+                # Update cover image.
                 if Rnd_CoverURL != '':
                     window['-OUTPUT_IMG-'].update(image_data=GetCoverArt(Rnd_CoverURL))
                 else:
                     window['-OUTPUT_IMG-'].update(image_data=default_png)
+                # Update title.
+                window['-OUTPUT-'].update(Rnd_title)
                 if (values['-showEng-'] == True) and (Rnd_english != ''):
                     window['-OUTPUT-'].update(Rnd_english)
+                # Update mean score.
                 if (values['-showScore-'] == True):
                     window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
+                # Update duration.
                 if (values['-showDuration-'] == True):
                     if (type(Rnd_duration) == int): 
                         window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
                     else:
                         window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes.")
+                # Update rating and genres.
                 if (values['-showInfo-'] == True):
-                    Rnd_rating = Rnd_rating.replace('_', ' ')
-                    Rnd_rating = Rnd_rating.upper() 
+                    Rnd_rating = Rnd_rating.replace('_', '-')
+                    Rnd_rating = Rnd_rating.upper()
                     window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
                     window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
             except:
