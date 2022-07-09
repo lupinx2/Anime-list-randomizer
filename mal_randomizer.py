@@ -7,7 +7,7 @@
 # split functions into multiple files.[]
 # Force cover art image size to avoid window resizing. []
 # prevent display error when api return is missing an expected key value pair  [x]
-# generally improve duartion string formatting. []
+# generally improve duartion string formatting. [x]
 # rating string should convert PG_13 to PG-13. [x]
 # back button.
 #
@@ -95,9 +95,9 @@ if __name__ == '__main__':
             secs -= 60
             mins += 1
         if hrs > 0:
-            return (str(hrs) + " hours, " + str(mins) + " minutes")
+            return (str(hrs) + " hour(s), " + str(mins) + " minute(s)")
         else:
-            return (str(mins) + " minutes")
+            return (str(mins) + " minute(s)")
 
     # Call this whenever the user changes the settings, to make sure the lists are updated.
     def SettingsChanged():
@@ -379,10 +379,18 @@ if __name__ == '__main__':
                     window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
                 # Update duration.
                 if (values['-showDuration-'] == True):
-                    if (type(Rnd_duration) == int): 
+                    if (Rnd_episodes > 1 and Rnd_duration != '?'):
                         window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
-                    else:
-                        window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes.")
+                    elif (Rnd_episodes > 1):
+                        window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, unknown duration.")
+                    if (Rnd_episodes == 1 and Rnd_duration != '?'):
+                        window['-OUTPUT_duration-'].update(SecondsToString(Rnd_duration) + ".")
+                    elif (Rnd_episodes == 1):
+                        window['-OUTPUT_duration-'].update("Unknown duration.")
+                    if (Rnd_episodes == 0 and Rnd_duration != '?'):
+                        window['-OUTPUT_duration-'].update(SecondsToString(Rnd_duration) + " per episode on average.")
+                    elif (Rnd_episodes == 0):
+                        window['-OUTPUT_duration-'].update("Unknown duration.")
                 # Update rating and genres.
                 if (values['-showInfo-'] == True):
                     Rnd_rating = Rnd_rating.replace('_', '-')
