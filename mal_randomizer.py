@@ -4,12 +4,14 @@
 # TODO
 #
 # update requirements in readme.
+# >notes from linux run:
+#  > had to apt install python3 and python3-pip
+#  > had to pip install pysimplegui
+#  > had to apt install python3-tk (tkinter)
+# 
 # split functions into multiple files.[]
 # Force cover art image size to avoid window resizing. []
-# prevent display error when api return is missing an expected key value pair  [x]
-# generally improve duartion string formatting. [x]
-# rating string should convert PG_13 to PG-13. [x]
-# back button.
+# back button.[]
 #
 #
 # API method:
