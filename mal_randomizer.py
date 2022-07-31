@@ -4,6 +4,11 @@
 # TODO
 #
 # update requirements in readme.
+# >notes from linux run:
+#  > had to apt install python3 and python3-pip
+#  > had to pip install pysimplegui
+#  > had to apt install python3-tk (tkinter)
+# 
 # split functions into multiple files.[]
 # Force cover art image size to avoid window resizing. []
 # back button.[]
