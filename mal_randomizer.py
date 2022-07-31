@@ -6,10 +6,7 @@
 # update requirements in readme.
 # split functions into multiple files.[]
 # Force cover art image size to avoid window resizing. []
-# prevent display error when api return is missing an expected key value pair  [x]
-# generally improve duartion string formatting. [x]
-# rating string should convert PG_13 to PG-13. [x]
-# back button.
+# back button.[]
 #
 #
 # API method:
@@ -135,6 +132,7 @@ if __name__ == '__main__':
     def GetCoverArt(coverURL):
         try:
             url = coverURL
+            #url = "https://cdn.myanimelist.net/images/anime/1682/101883l.jpg" # wide image for testing
             sleep(0.5)  # Sleep to prevent rate limiting.
             response = requests.get(url, stream=True)
             response.raw.decode_content = True # Get jpg format bytes from response...
@@ -276,7 +274,7 @@ if __name__ == '__main__':
    
     Gooey.theme('LightGrey1')
     # Output Columns.
-    col_left = [[Gooey.Button(image_data=default_png, key="-OUTPUT_IMG-",image_size=(200,278))]]
+    col_left = [[Gooey.Button(image_data=default_png, key="-OUTPUT_IMG-",image_size=(200,278), size=(200,278), tooltip="Click to open in browser.")]]
     col_rite = [[Gooey.Text("", font='Verdana 12 bold', size=(33, 2), key='-OUTPUT-')],
                 [Gooey.Text("", font='Verdana 11', size=(15, 1), key='-OUTPUT_score-')],
                 [Gooey.Text("", font='Verdana 11', size=(45, 1), key='-OUTPUT_duration-')],
