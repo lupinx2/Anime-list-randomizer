@@ -5,13 +5,20 @@
 #
 # update requirements in readme.
 # >notes from linux run:
-#  > had to apt install python3 and python3-pip
-#  > had to pip install pysimplegui
-#  > had to apt install python3-tk (tkinter)
+#  # pip isntall pysimplegui + apt install python3-tk
 # 
-# split functions into multiple files.[]
-# Force cover art image size to avoid window resizing. []
-# back button.[]
+# *split functions into multiple files?[]
+# *Force cover art image size to avoid window resizing. []
+# *use global variables to reduce number of arguments? []
+# *add API call counter.[]
+# *remove SaveOutput function, replaced by global tuple. []
+#
+# *Webscrape mode??? []
+#
+# Possible Back button bheaviors:
+#   Stores each result and simply navigates backwards. <---- list? stack?
+#   Always shows the prev result, causing a loop if the button is pressed twice. <---- implement by commeting out the line that disables 'back' button.
+#   Goes back once then disables the button until the next result is shown. <---- currently implemented.
 #
 #
 # API method:
@@ -28,11 +35,11 @@
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
-import PySimpleGUI as Gooey # pip isntall pysimplegui
+import PySimpleGUI as Gooey 
 from os import getcwd, path
 from random import randint
 from time import sleep
-from PIL import Image # pip isntall pillow
+from PIL import Image
 import webbrowser
 import requests
 import sys
@@ -45,12 +52,14 @@ if __name__ == '__main__':
     list_coverImg = list()
     no_movies = False
     only_movies = False
+    rnd_Title, rnd_id, rnd_CoverURL = '', '', ''
     prevAPIcall = ""
     prevXMLfile = ""
+    prevOutput = ("","","")
     MALURL = "https://myanimelist.net/"
     CurrentDir = getcwd()
     # default image when there is no cover art to display.
-    # this should work with auto-py-to-exe or pyinstaller.
+    # this method should work with auto-py-to-exe or pyinstaller.
     default_pngPath = path.join((getattr(sys, '_MEIPASS', path.dirname(path.abspath('designismypassion.png')))), 'designismypassion.png')
     pil_im = Image.open(default_pngPath)
     d = io.BytesIO()
@@ -118,6 +127,61 @@ if __name__ == '__main__':
         window['-OUTPUT_genre-'].update("")
         MALURL = 'https://myanimelist.net/'
         
+    # Saves the current output for the back button as a tuple. (title, id, coverURL)
+    # call with empty strings to return the last saved output as a tuple.
+    def SaveOutput(AnimeTitle, AnimeID, AnimeCoverURL):
+        global prevOutput
+        if AnimeTitle == "" and AnimeID == "" and AnimeCoverURL == "":
+            return prevOutput
+        else:
+            prevOutput = (AnimeTitle, AnimeID, AnimeCoverURL)
+
+    # Updates the GUI with the current output.
+    # this function always makes 1 API call to get additional anime info.
+    # intended to be used with output from GetRandomAnime()
+    def displayOutput(AnimeTitle, AnimeID, AnimeCoverURL):
+        try:
+            # Get the anime's details from the API using the ID.
+            AnimeEnglish, AnimeMean, AnimeEpisodes, AnimeDuration, AnimeRating, AnimeGenres = GetAnimeInfo(AnimeID)
+            # Clear the output.
+            ClearOutput()
+            # update clickable image link.
+            MALURL = 'https://myanimelist.net/anime/' + str(rnd_id)
+            # Update cover image.
+            if AnimeCoverURL != '':
+                window['-OUTPUT_IMG-'].update(image_data=GetCoverArt(AnimeCoverURL))
+            else:
+                window['-OUTPUT_IMG-'].update(image_data=default_png)
+            # Update title.
+            window['-OUTPUT-'].update(AnimeTitle)
+            if (values['-showEng-'] == True) and (AnimeEnglish != ''):
+                window['-OUTPUT-'].update(AnimeEnglish)
+            # Update mean score.
+            if (values['-showScore-'] == True):
+                window['-OUTPUT_score-'].update("Score: " + str(AnimeMean))
+            # Update duration.
+            if (values['-showDuration-'] == True):
+                if (AnimeEpisodes > 1 and AnimeDuration != '?'):
+                    window['-OUTPUT_duration-'].update(str(AnimeEpisodes) + " episodes, averaging " + SecondsToString(AnimeDuration) + " each.")
+                elif (AnimeEpisodes > 1):
+                    window['-OUTPUT_duration-'].update(str(AnimeEpisodes) + " episodes, unknown duration.")
+                if (AnimeEpisodes == 1 and AnimeDuration != '?'):
+                    window['-OUTPUT_duration-'].update(SecondsToString(AnimeDuration) + ".")
+                elif (AnimeEpisodes == 1):
+                    window['-OUTPUT_duration-'].update("Unknown duration.")
+                if (AnimeEpisodes == 0 and AnimeDuration != '?'):
+                    window['-OUTPUT_duration-'].update(SecondsToString(AnimeDuration) + " per episode on average.")
+                elif (AnimeEpisodes == 0):
+                    window['-OUTPUT_duration-'].update("Unknown duration.")
+            # Update rating and genres.
+            if (values['-showInfo-'] == True):
+                AnimeRating = AnimeRating.replace('_', '-')
+                AnimeRating = AnimeRating.upper()
+                window['-OUTPUT_rating-'].update("Rating: " + "{}".format(AnimeRating))
+                window['-OUTPUT_genre-'].update("Genres:" + AnimeGenres[1:])
+        except:
+            ClearOutput()
+            window['-OUTPUT-'].update("Error: Display error.")
 
     # Returns a tuple with the title, MAL page, and cover art URL from the lists.
     def GetRandomAnime():
@@ -130,7 +194,6 @@ if __name__ == '__main__':
             return "{}".format(list_titles[rand_index]), \
                 list_id[rand_index], \
                 list_coverImg[rand_index]
-
 
     # Returns png image of the cover art from the URL.
     # makes 1 API call every time this function is called.
@@ -279,7 +342,8 @@ if __name__ == '__main__':
    
     Gooey.theme('LightGrey1')
     # Output Columns.
-    col_left = [[Gooey.Button(image_data=default_png, key="-OUTPUT_IMG-",image_size=(200,278), size=(200,278), tooltip="Click to open in browser.")]]
+    col_left = [[Gooey.Button(image_data=default_png, key="-OUTPUT_IMG-",image_size=(200,278), \
+                                size=(200,278), tooltip="Click to open in browser.")]]
     col_rite = [[Gooey.Text("", font='Verdana 12 bold', size=(33, 2), key='-OUTPUT-')],
                 [Gooey.Text("", font='Verdana 11', size=(15, 1), key='-OUTPUT_score-')],
                 [Gooey.Text("", font='Verdana 11', size=(45, 1), key='-OUTPUT_duration-')],
@@ -291,7 +355,7 @@ if __name__ == '__main__':
                    [Gooey.Radio("Exclude Movies", 666, default=False, disabled=False, enable_events=True, key='-no_Movies-'),
                      Gooey.Radio("Only Movies/OVA", 666, default=False, disabled=False, enable_events=True, key='-only_Movies-'),
                      Gooey.Radio("Any anime", 666, default=True, disabled=False, enable_events=True, key='-any_Anime-')],
-                   [Gooey.Column(col_left), Gooey.Column(col_rite)]]
+                   [Gooey.Column(col_left), Gooey.Column(col_rite)]] #<-- Output Columns.
     # The settings tab.
     tab2_layout = [[Gooey.Push(), Gooey.T('API Key:'),
                      Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
@@ -307,7 +371,7 @@ if __name__ == '__main__':
     layout = [
         [Gooey.TabGroup([[Gooey.Tab('Main', tab1_layout), 
                           Gooey.Tab('Settings', tab2_layout)]])],
-        [Gooey.Push(), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
+        [Gooey.Push(),Gooey.Button('Back', disabled=True), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
     window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
 
     # Loop listening for GUI events.
@@ -338,6 +402,7 @@ if __name__ == '__main__':
             with open('config.py', 'w+') as file:
                 file.write("API_key = \"" + API_key + "\"")
         if event in ('-OUTPUT_IMG-'):
+            # user clicks on the cover image.
             webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
             if values['-useXML-'] == True:
@@ -362,46 +427,25 @@ if __name__ == '__main__':
                     ClearOutput()
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
                     continue
+            # save current output, enable the back button.
+            SaveOutput(rnd_Title, rnd_id, rnd_CoverURL)
+            window['Back'].update(disabled=False)
+            # Get the random anime from the list.
+            rnd_Title, rnd_id, rnd_CoverURL = GetRandomAnime()
+            # Display the anime in the GUI.           
+            displayOutput(rnd_Title, rnd_id, rnd_CoverURL)            
+        if event == 'Back':
+            window['Back'].update(disabled=True)#<---- Prevent multiple  uses of the back button. 
             try:
-                Rnd_title, Rnd_id, Rnd_CoverURL = GetRandomAnime()
-                Rnd_english, Rnd_mean, Rnd_episodes, Rnd_duration, Rnd_rating, Rnd_genres = GetAnimeInfo(Rnd_id)
-                ClearOutput()
-                # update clickable image link.
-                MALURL = 'https://myanimelist.net/anime/' + str(Rnd_id)
-                # Update cover image.
-                if Rnd_CoverURL != '':
-                    window['-OUTPUT_IMG-'].update(image_data=GetCoverArt(Rnd_CoverURL))
+                if prevOutput[1] != '':
+                    displayOutput(prevOutput[0], prevOutput[1], prevOutput[2])
+                    _buffer = (rnd_Title, rnd_id, rnd_CoverURL)
+                    rnd_Title, rnd_id, rnd_CoverURL = prevOutput
+                    prevOutput = _buffer
                 else:
-                    window['-OUTPUT_IMG-'].update(image_data=default_png)
-                # Update title.
-                window['-OUTPUT-'].update(Rnd_title)
-                if (values['-showEng-'] == True) and (Rnd_english != ''):
-                    window['-OUTPUT-'].update(Rnd_english)
-                # Update mean score.
-                if (values['-showScore-'] == True):
-                    window['-OUTPUT_score-'].update("Score: " + str(Rnd_mean))
-                # Update duration.
-                if (values['-showDuration-'] == True):
-                    if (Rnd_episodes > 1 and Rnd_duration != '?'):
-                        window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, averaging " + SecondsToString(Rnd_duration) + " each.")
-                    elif (Rnd_episodes > 1):
-                        window['-OUTPUT_duration-'].update(str(Rnd_episodes) + " episodes, unknown duration.")
-                    if (Rnd_episodes == 1 and Rnd_duration != '?'):
-                        window['-OUTPUT_duration-'].update(SecondsToString(Rnd_duration) + ".")
-                    elif (Rnd_episodes == 1):
-                        window['-OUTPUT_duration-'].update("Unknown duration.")
-                    if (Rnd_episodes == 0 and Rnd_duration != '?'):
-                        window['-OUTPUT_duration-'].update(SecondsToString(Rnd_duration) + " per episode on average.")
-                    elif (Rnd_episodes == 0):
-                        window['-OUTPUT_duration-'].update("Unknown duration.")
-                # Update rating and genres.
-                if (values['-showInfo-'] == True):
-                    Rnd_rating = Rnd_rating.replace('_', '-')
-                    Rnd_rating = Rnd_rating.upper()
-                    window['-OUTPUT_rating-'].update("Rating: " + "{}".format(Rnd_rating))
-                    window['-OUTPUT_genre-'].update("Genres:" + Rnd_genres[1:])
+                    ClearOutput()
             except:
                 ClearOutput()
-                window['-OUTPUT-'].update("Error: Display error.")
+                window['-OUTPUT-'].update("Error: Back button error.")
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             sys.exit(0)
