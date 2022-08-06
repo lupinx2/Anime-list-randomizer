@@ -19,7 +19,7 @@ pip-selfcheck.json
 # python files
 DEBUG malptw_rand.py
 config.py
-config.py
+config_DBUG.py
 
 # API Ouptput JSON file
 API_output.json
