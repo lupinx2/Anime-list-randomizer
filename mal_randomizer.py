@@ -11,14 +11,7 @@
 # *Force cover art image size to avoid window resizing. []
 # *use global variables to reduce number of arguments? []
 # *add API call counter.[]
-# *remove SaveOutput function, replaced by global tuple. []
 #
-# *Webscrape mode??? []
-#
-# Possible Back button bheaviors:
-#   Stores each result and simply navigates backwards. <---- list? stack?
-#   Always shows the prev result, causing a loop if the button is pressed twice. <---- implement by commeting out the line that disables 'back' button.
-#   Goes back once then disables the button until the next result is shown. <---- currently implemented.
 #
 #
 # API method:
