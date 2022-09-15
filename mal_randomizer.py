@@ -13,6 +13,14 @@
 # *add API call counter.[]
 #
 #
+# HOW THE BACK/NEXT BUTTONS should work
+# the buttons should only show up if the stting is toggle on
+# when random output is generated, save to a history tracker before displaying it
+# back and next buttons allow moving along this tracker
+# save pictures locally!? make API call each time? best to store the whole output?
+# hitting randomize should clear out all saved output that would be "next"
+# this possibly requires creating a new structure for storing output.
+#
 #
 # API method:
 #  1 per-username API call to get the list
@@ -40,30 +48,39 @@ import io
 
 if __name__ == '__main__':
 
+    # Globa variables
     list_titles = list()
     list_id = list()
     list_coverImg = list()
+    list_history = list("","","")
+
     no_movies = False
     only_movies = False
+    allow_back = False
+
     rnd_Title, rnd_id, rnd_CoverURL = '', '', ''
     prevAPIcall = ""
     prevXMLfile = ""
-    prevOutput = ("","","")
+    #prevOutput = ("","","")
+
     MALURL = "https://myanimelist.net/"
+
+    # load the default iamge
     CurrentDir = getcwd()
-    # default image when there is no cover art to display.
     # this method should work with auto-py-to-exe or pyinstaller.
     default_pngPath = path.join((getattr(sys, '_MEIPASS', path.dirname(path.abspath('designismypassion.png')))), 'designismypassion.png')
     pil_im = Image.open(default_pngPath)
     d = io.BytesIO()
     pil_im.save(d, 'png')
     default_png = d.getvalue()
+
     # if there is no config file, create one
     if not path.exists(CurrentDir + "/config.py"):
         with open("config.py", "w+") as file:
             file.write("API_key = \"******\"")
             file.close()
-    # manually reads the Api key from the config file instead of importing it...
+
+    # manually read the Api key from the config file instead of importing it...
     # otherwise the value would be locked in when bundling the app.
     with open("config.py", "r") as file:
         API_key = file.read(-1)
@@ -75,6 +92,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------------------------
 
     # Yields every value in a dict where its key matches the argument.
+    # https://stackoverflow.com/a/29652561/15460873
     def gen_dict_extract(var, key):
             if isinstance(var, dict):
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
@@ -363,12 +381,14 @@ if __name__ == '__main__':
                    [Gooey.Checkbox('Show english title', default=False, key='-showEng-')],
                    [Gooey.Checkbox('Show mean score', default=True, key='-showScore-')],
                    [Gooey.Checkbox('Show duration', default=True, key='-showDuration-')],
-                   [Gooey.Checkbox('Show additional info', default=False,  key='-showInfo-')]]
+                   [Gooey.Checkbox('Show additional info', default=False,  key='-showInfo-')],
+                   [Gooey.Checkbox('Enable back/next buttons', default=False, key='-allowBack-')]]
     # The main layout.
     layout = [
         [Gooey.TabGroup([[Gooey.Tab('Main', tab1_layout), 
                           Gooey.Tab('Settings', tab2_layout)]])],
-        [Gooey.Push(),Gooey.Button('Back', disabled=True), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
+        [Gooey.Push(),Gooey.Button('Back', disabled=True), Gooey.Button('Next', disabled=True), 
+         Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
     window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
 
     # Loop listening for GUI events.
