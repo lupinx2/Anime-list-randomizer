@@ -7,7 +7,6 @@
 # >notes from linux run:
 #  # pip isntall pysimplegui + apt install python3-tk
 # 
-# *split functions into multiple files?[]
 # *Force cover art image size to avoid window resizing. []
 # *use global variables to reduce number of arguments? []
 # *add API call counter.[]
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     list_titles = list()
     list_id = list()
     list_coverImg = list()
-    list_history = list("","","")
+    list_history = list()
 
     no_movies = False
     only_movies = False
@@ -61,7 +60,6 @@ if __name__ == '__main__':
     rnd_Title, rnd_id, rnd_CoverURL = '', '', ''
     prevAPIcall = ""
     prevXMLfile = ""
-    #prevOutput = ("","","")
 
     MALURL = "https://myanimelist.net/"
 
@@ -137,15 +135,6 @@ if __name__ == '__main__':
         window['-OUTPUT_rating-'].update("")
         window['-OUTPUT_genre-'].update("")
         MALURL = 'https://myanimelist.net/'
-        
-    # Saves the current output for the back button as a tuple. (title, id, coverURL)
-    # call with empty strings to return the last saved output as a tuple.
-    def SaveOutput(AnimeTitle, AnimeID, AnimeCoverURL):
-        global prevOutput
-        if AnimeTitle == "" and AnimeID == "" and AnimeCoverURL == "":
-            return prevOutput
-        else:
-            prevOutput = (AnimeTitle, AnimeID, AnimeCoverURL)
 
     # Updates the GUI with the current output.
     # this function always makes 1 API call to get additional anime info.
@@ -374,7 +363,7 @@ if __name__ == '__main__':
     # The settings tab.
     tab2_layout = [[Gooey.Push(), Gooey.T('API Key:'),
                      Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
-                     Gooey.Button('Save', key='-SAVE-')],
+                     Gooey.Button('Save', key='-saveApiKey-')],
                    [Gooey.Checkbox('Use local XML file', key='-useXML-', enable_events=True),
                      Gooey.Push(), Gooey.T('XML file:'),
                      Gooey.Input(key='-XMLfileInput-'), Gooey.FileBrowse()],
@@ -414,12 +403,12 @@ if __name__ == '__main__':
             SettingsChanged()
         if event == '-showInfo-':
             SettingsChanged()
-        if event in ('-SAVE-'):
+        if event in ('-saveApiKey-'):
             API_key = values['-apiKeyInput-']
             with open('config.py', 'w+') as file:
                 file.write("API_key = \"" + API_key + "\"")
         if event in ('-OUTPUT_IMG-'):
-            # user clicks on the cover image.
+            # if user clicks on the cover image.
             webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
             if values['-useXML-'] == True:
@@ -444,25 +433,9 @@ if __name__ == '__main__':
                     ClearOutput()
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
                     continue
-            # save current output, enable the back button.
-            SaveOutput(rnd_Title, rnd_id, rnd_CoverURL)
-            window['Back'].update(disabled=False)
             # Get the random anime from the list.
             rnd_Title, rnd_id, rnd_CoverURL = GetRandomAnime()
             # Display the anime in the GUI.           
-            displayOutput(rnd_Title, rnd_id, rnd_CoverURL)            
-        if event == 'Back':
-            window['Back'].update(disabled=True)#<---- Prevent multiple  uses of the back button. 
-            try:
-                if prevOutput[1] != '':
-                    displayOutput(prevOutput[0], prevOutput[1], prevOutput[2])
-                    _buffer = (rnd_Title, rnd_id, rnd_CoverURL)
-                    rnd_Title, rnd_id, rnd_CoverURL = prevOutput
-                    prevOutput = _buffer
-                else:
-                    ClearOutput()
-            except:
-                ClearOutput()
-                window['-OUTPUT-'].update("Error: Back button error.")
+            displayOutput(rnd_Title, rnd_id, rnd_CoverURL)
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             sys.exit(0)
