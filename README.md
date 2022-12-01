@@ -10,6 +10,8 @@ For the .exe version:
 Aditionally, if you just download the repo:  
 - Python 3.2+  
 - pysimplegui (`pip install pysimplegui`)  
+- tkinter (`sudo apt-get install python3-tk`)  
+- PIL (`pip install pillow`)  
 
 ## How to get your exported XML MAL file
 Go to your MAL anime list page and locate the sidebar on the right. Then click the `Export` button.
