@@ -2,18 +2,11 @@
 # Using either the API or a local xml file.
 #
 # TODO
-#
-# update requirements in readme.
-# >notes from linux run:
-#  # pip isntall pysimplegui + apt install python3-tk
 # 
-# *split functions into multiple files?[]
 # *Force cover art image size to avoid window resizing. []
 # *use global variables to reduce number of arguments? []
 # *add API call counter.[]
 # *remove SaveOutput function, replaced by global tuple. []
-#
-# *Webscrape mode??? []
 #
 # Possible Back button bheaviors:
 #   Stores each result and simply navigates backwards. <---- list? stack?
