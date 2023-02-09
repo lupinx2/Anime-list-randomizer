@@ -6,12 +6,7 @@
 # *Force cover art image size to avoid window resizing. []
 # *use global variables to reduce number of arguments? []
 # *add API call counter.[]
-# *remove SaveOutput function, replaced by global tuple. []
 #
-# Possible Back button bheaviors:
-#   Stores each result and simply navigates backwards. <---- list? stack?
-#   Always shows the prev result, causing a loop if the button is pressed twice. <---- implement by commeting out the line that disables 'back' button.
-#   Goes back once then disables the button until the next result is shown. <---- currently implemented.
 #
 #
 # API method:
@@ -154,17 +149,20 @@ if __name__ == '__main__':
                 window['-OUTPUT_score-'].update("Score: " + str(AnimeMean))
             # Update duration.
             if (values['-showDuration-'] == True):
-                if (AnimeEpisodes > 1 and AnimeDuration != '?'):
-                    window['-OUTPUT_duration-'].update(str(AnimeEpisodes) + " episodes, averaging " + SecondsToString(AnimeDuration) + " each.")
-                elif (AnimeEpisodes > 1):
-                    window['-OUTPUT_duration-'].update(str(AnimeEpisodes) + " episodes, unknown duration.")
-                if (AnimeEpisodes == 1 and AnimeDuration != '?'):
-                    window['-OUTPUT_duration-'].update(SecondsToString(AnimeDuration) + ".")
-                elif (AnimeEpisodes == 1):
-                    window['-OUTPUT_duration-'].update("Unknown duration.")
-                if (AnimeEpisodes == 0 and AnimeDuration != '?'):
-                    window['-OUTPUT_duration-'].update(SecondsToString(AnimeDuration) + " per episode on average.")
-                elif (AnimeEpisodes == 0):
+                if (AnimeEpisodes != '?'):
+                    if (AnimeEpisodes > 1 and AnimeDuration != '?'):
+                        window['-OUTPUT_duration-'].update(str(AnimeEpisodes) + " episodes, averaging " + SecondsToString(AnimeDuration) + " each.")
+                    elif (AnimeEpisodes > 1):
+                        window['-OUTPUT_duration-'].update(str(AnimeEpisodes) + " episodes, unknown duration.")
+                    if (AnimeEpisodes == 1 and AnimeDuration != '?'):
+                        window['-OUTPUT_duration-'].update(SecondsToString(AnimeDuration) + ".")
+                    elif (AnimeEpisodes == 1):
+                        window['-OUTPUT_duration-'].update("Unknown duration.")
+                    if (AnimeEpisodes == 0 and AnimeDuration != '?'):
+                        window['-OUTPUT_duration-'].update(SecondsToString(AnimeDuration) + " per episode on average.")
+                    elif (AnimeEpisodes == 0):
+                        window['-OUTPUT_duration-'].update("Unknown duration.")
+                else:
                     window['-OUTPUT_duration-'].update("Unknown duration.")
             # Update rating and genres.
             if (values['-showInfo-'] == True):
@@ -214,6 +212,7 @@ if __name__ == '__main__':
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             return '', '?', '?', '0', '?', '?'
+            #AnimeEnglish, AnimeMean, AnimeEpisodes, AnimeDuration, AnimeRating, AnimeGenres
         responseBytes = (response.content)
         responseString = responseBytes.decode("utf-8")
         outputDict = jsonLoads(responseString)
