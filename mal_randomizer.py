@@ -131,6 +131,7 @@ if __name__ == '__main__':
     # this function always makes 1 API call to get additional anime info.
     # intended to be used with output from GetRandomAnime()
     def displayOutput(AnimeTitle, AnimeID, AnimeCoverURL):
+        global MALURL
         try:
             # Get the anime's details from the API using the ID.
             AnimeEnglish, AnimeMean, AnimeEpisodes, AnimeDuration, AnimeRating, AnimeGenres = GetAnimeInfo(AnimeID)
