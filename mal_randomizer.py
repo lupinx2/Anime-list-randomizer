@@ -4,9 +4,7 @@
 # TODO
 # 
 # *Force cover art image size to avoid window resizing. []
-# *use global variables to reduce number of arguments? []
 # *add API call counter.[]
-#
 #
 #
 # API method:
@@ -20,6 +18,8 @@
 #  2 per-anime API calls to get picture
 #  1 per-anime API call to get the anime info
 #  total 1.4 seconds sleep per anime
+#
+# The Back/Next buttons make 1 API call when used.
 
 from json import loads as jsonLoads
 import xml.etree.ElementTree as ET
@@ -35,30 +35,41 @@ import io
 
 if __name__ == '__main__':
 
+    # Global variables
+    # these lists store all the PTW animes extracted from the API or XML file.
     list_titles = list()
     list_id = list()
     list_coverImg = list()
+    # this stack stores the history of random outputs for the back button.
+    stack_history = list()
+    stack_hist_ptr = 0
+
     no_movies = False
     only_movies = False
+    allow_back = False
+
     rnd_Title, rnd_id, rnd_CoverURL = '', '', ''
     prevAPIcall = ""
     prevXMLfile = ""
-    prevOutput = ("","","")
+
     MALURL = "https://myanimelist.net/"
+
+    # load the default iamge
     CurrentDir = getcwd()
-    # default image when there is no cover art to display.
     # this method should work with auto-py-to-exe or pyinstaller.
     default_pngPath = path.join((getattr(sys, '_MEIPASS', path.dirname(path.abspath('designismypassion.png')))), 'designismypassion.png')
     pil_im = Image.open(default_pngPath)
     d = io.BytesIO()
     pil_im.save(d, 'png')
     default_png = d.getvalue()
+
     # if there is no config file, create one
     if not path.exists(CurrentDir + "/config.py"):
         with open("config.py", "w+") as file:
             file.write("API_key = \"******\"")
             file.close()
-    # manually reads the Api key from the config file instead of importing it...
+
+    # manually read the Api key from the config file instead of importing it...
     # otherwise the value would be locked in when bundling the app.
     with open("config.py", "r") as file:
         API_key = file.read(-1)
@@ -70,6 +81,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------------------------
 
     # Yields every value in a dict where its key matches the argument.
+    # https://stackoverflow.com/a/29652561/15460873
     def gen_dict_extract(var, key):
             if isinstance(var, dict):
                 for dictKey, dictValue in var.items():  # for every (key:value) pair in var...
@@ -114,15 +126,6 @@ if __name__ == '__main__':
         window['-OUTPUT_rating-'].update("")
         window['-OUTPUT_genre-'].update("")
         MALURL = 'https://myanimelist.net/'
-        
-    # Saves the current output for the back button as a tuple. (title, id, coverURL)
-    # call with empty strings to return the last saved output as a tuple.
-    def SaveOutput(AnimeTitle, AnimeID, AnimeCoverURL):
-        global prevOutput
-        if AnimeTitle == "" and AnimeID == "" and AnimeCoverURL == "":
-            return prevOutput
-        else:
-            prevOutput = (AnimeTitle, AnimeID, AnimeCoverURL)
 
     # Updates the GUI with the current output.
     # this function always makes 1 API call to get additional anime info.
@@ -311,7 +314,7 @@ if __name__ == '__main__':
                     list_id.pop()
         prevXMLfile = XMLfile
 
-    # Get URL for cover art of a single anime, using the API. (Only way I could find to get the cover art.)
+    # Get URL for cover art of a single anime, using the API.
     # makes 1 API call every time this function is called.
     def XMLgetCoverURL(animeID):
         try:
@@ -351,7 +354,7 @@ if __name__ == '__main__':
     # The settings tab.
     tab2_layout = [[Gooey.Push(), Gooey.T('API Key:'),
                      Gooey.In(key='-apiKeyInput-', default_text=API_key , password_char='●', right_click_menu=[[''], ['Paste API key']]),
-                     Gooey.Button('Save', key='-SAVE-')],
+                     Gooey.Button('Save', key='-saveApiKey-')],
                    [Gooey.Checkbox('Use local XML file', key='-useXML-', enable_events=True),
                      Gooey.Push(), Gooey.T('XML file:'),
                      Gooey.Input(key='-XMLfileInput-'), Gooey.FileBrowse()],
@@ -363,7 +366,8 @@ if __name__ == '__main__':
     layout = [
         [Gooey.TabGroup([[Gooey.Tab('Main', tab1_layout), 
                           Gooey.Tab('Settings', tab2_layout)]])],
-        [Gooey.Push(),Gooey.Button('Back', disabled=True), Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
+        [Gooey.Push(),Gooey.Button('Back', disabled=False), Gooey.Button('Next', disabled=False), 
+         Gooey.Button('Randomize!', bind_return_key=True), Gooey.Button('Exit')]]
     window = Gooey.Window('MAL Randomizer', layout)  # Create the window.
 
     # Loop listening for GUI events.
@@ -389,12 +393,12 @@ if __name__ == '__main__':
             SettingsChanged()
         if event == '-showInfo-':
             SettingsChanged()
-        if event == '-SAVE-':
+        if event == '-saveApiKey-':
             API_key = values['-apiKeyInput-']
             with open('config.py', 'w+') as file:
                 file.write("API_key = \"" + API_key + "\"")
         if event == '-OUTPUT_IMG-':
-            # user clicks on the cover image.
+            # if user clicks on the cover image.
             webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
             if values['-useXML-'] == True:
@@ -419,25 +423,22 @@ if __name__ == '__main__':
                     ClearOutput()
                     window['-OUTPUT-'].update("Error: No anime found in PTW list.")
                     continue
-            # save current output, enable the back button.
-            SaveOutput(rnd_Title, rnd_id, rnd_CoverURL)
-            window['Back'].update(disabled=False)
             # Get the random anime from the list.
             rnd_Title, rnd_id, rnd_CoverURL = GetRandomAnime()
-            # Display the anime in the GUI.           
-            displayOutput(rnd_Title, rnd_id, rnd_CoverURL)            
+            # Add the anime to the history stack, as the new top.
+            if stack_hist_ptr < len(stack_history) - 1:
+                stack_history = stack_history[:stack_hist_ptr + 1]
+            stack_history.append(tuple((rnd_id, rnd_Title, rnd_CoverURL)))
+            stack_hist_ptr = len(stack_history) - 1
+            # Display the anime in the GUI.
+            displayOutput(rnd_Title, rnd_id, rnd_CoverURL)
         if event == 'Back':
-            window['Back'].update(disabled=True)#<---- Prevent multiple  uses of the back button. 
-            try:
-                if prevOutput[1] != '':
-                    displayOutput(prevOutput[0], prevOutput[1], prevOutput[2])
-                    _buffer = (rnd_Title, rnd_id, rnd_CoverURL)
-                    rnd_Title, rnd_id, rnd_CoverURL = prevOutput
-                    prevOutput = _buffer
-                else:
-                    ClearOutput()
-            except:
-                ClearOutput()
-                window['-OUTPUT-'].update("Error: Back button error.")
+            if stack_hist_ptr > 0:
+                stack_hist_ptr -= 1
+                displayOutput(stack_history[stack_hist_ptr][1], stack_history[stack_hist_ptr][0], stack_history[stack_hist_ptr][2])
+        if event == 'Next':
+            if stack_hist_ptr < len(stack_history) - 1:
+                stack_hist_ptr += 1
+                displayOutput(stack_history[stack_hist_ptr][1], stack_history[stack_hist_ptr][0], stack_history[stack_hist_ptr][2])
         if event in (Gooey.WIN_CLOSED, 'Exit'):
             sys.exit(0)
