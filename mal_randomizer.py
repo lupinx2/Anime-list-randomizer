@@ -2,6 +2,7 @@
 # Using either the API or a local xml file.
 #
 # TODO
+# 
 # *Force cover art image size to avoid window resizing. []
 # *add API call counter.[]
 #
