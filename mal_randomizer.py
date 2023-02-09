@@ -389,11 +389,11 @@ if __name__ == '__main__':
             SettingsChanged()
         if event == '-showInfo-':
             SettingsChanged()
-        if event in ('-SAVE-'):
+        if event == '-SAVE-':
             API_key = values['-apiKeyInput-']
             with open('config.py', 'w+') as file:
                 file.write("API_key = \"" + API_key + "\"")
-        if event in ('-OUTPUT_IMG-'):
+        if event == '-OUTPUT_IMG-':
             # user clicks on the cover image.
             webbrowser.open_new_tab(MALURL)
         if event == 'Randomize!':
