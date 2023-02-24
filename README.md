@@ -68,6 +68,11 @@ If you're not on Windows, or would prefer to use a terminal just `cd` into the r
 
 `python mal_randomizer.py` or `python3 mal_randomizer.py`
 
+## Support
+
+This repository is actively mantained! if you encounter any issues or difficulties, or have a suggestion,  
+please feel free to open a thread in the Issues tab.  
+
 ## FAQ
 
 **Q:** This seems like way too much effort just to pick a random anime.
